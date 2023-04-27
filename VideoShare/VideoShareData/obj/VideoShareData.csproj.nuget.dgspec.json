@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareData\\VideoShareData.csproj": {}
+    "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj": {}
   },
   "projects": {
-    "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareData\\VideoShareData.csproj": {
+    "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareData\\VideoShareData.csproj",
+        "projectUniqueName": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj",
         "projectName": "VideoShareData",
-        "projectPath": "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareData\\VideoShareData.csproj",
+        "projectPath": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj",
         "packagesPath": "C:\\Users\\lkmet\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareData\\obj\\",
+        "outputPath": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\lkmet\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -39,6 +39,36 @@
       "frameworks": {
         "net6.0": {
           "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "System.Data.SqlClient": {
+              "target": "Package",
+              "version": "[4.8.5, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

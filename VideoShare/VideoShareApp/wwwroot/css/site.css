@@ -18,6 +18,18 @@ a, .btn-link {
     border-color: #1861ac;
 }
 
+.vertical-center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+.standardGreen {
+    background-color: #06C202;
+}
+
 .content {
     padding-top: 1.1rem;
 }

@@ -1,17 +1,99 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareApp\\VideoShareApp.csproj": {}
+    "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareApp\\VideoShareApp.csproj": {}
   },
   "projects": {
-    "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareApp\\VideoShareApp.csproj": {
+    "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareApp\\VideoShareApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareApp\\VideoShareApp.csproj",
+        "projectUniqueName": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareApp\\VideoShareApp.csproj",
         "projectName": "VideoShareApp",
-        "projectPath": "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareApp\\VideoShareApp.csproj",
+        "projectPath": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareApp\\VideoShareApp.csproj",
         "packagesPath": "C:\\Users\\lkmet\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\lkmet\\source\\repos\\VideoShare\\VideoShareApp\\obj\\",
+        "outputPath": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareApp\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\lkmet\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {
+              "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj": {
+                "projectPath": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "System.Configuration.ConfigurationManager": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj",
+        "projectName": "VideoShareData",
+        "projectPath": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\VideoShareData.csproj",
+        "packagesPath": "C:\\Users\\lkmet\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareData\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\lkmet\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -39,6 +121,36 @@
       "frameworks": {
         "net6.0": {
           "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "System.Data.SqlClient": {
+              "target": "Package",
+              "version": "[4.8.5, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -51,9 +163,6 @@
           "assetTargetFallback": true,
           "warn": true,
           "frameworkReferences": {
-            "Microsoft.AspNetCore.App": {
-              "privateAssets": "none"
-            },
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }

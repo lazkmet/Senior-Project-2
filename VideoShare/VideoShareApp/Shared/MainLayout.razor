@@ -2,18 +2,25 @@
 
 <PageTitle>VideoShareApp</PageTitle>
 
-<div class="page">
+
+<div>
     <div class="sidebar">
         <NavMenu />
     </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+    <div class="page">
+        <header class="standardGreen" style="height:2rem">
+            <div class ="vertical-center" style="color:white;position:relative;padding-left:20px">
+                Video Share
+            </div>
+        </header>
+        <main>
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>
 </div>
+
+@code{
+    string adminHeader = "standardGreen"; //use standardGreen or adminRed depending on user
+}

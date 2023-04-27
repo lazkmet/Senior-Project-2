@@ -1,13 +1,17 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using VideoShareApp.Data;
+using Microsoft.EntityFrameworkCore;
+using VideoShareData.Models;
+using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddDbContext<WebAppDbContext>(options => {
+    options.UseSqlServer(builder.Configuration.GetConnectionString("VideoShare"));
+});
 
 var app = builder.Build();
 

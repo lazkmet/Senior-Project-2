@@ -9,7 +9,7 @@ CREATE TABLE Users(
 		CONSTRAINT Users_Unique_FileGUID UNIQUE,
 	EmailAddress varchar(254) NOT NULL
 		CONSTRAINT Users_Unique_EmailAddress UNIQUE,
-	EncryptedPassword varchar(255) NOT NULL,
+	EncryptedPassword varbinary(max) NOT NULL,
 	FirstName varchar(50),
 	LastName varchar(50),
 	ProfilePicture varbinary(max) FILESTREAM NULL,
@@ -19,7 +19,7 @@ CREATE TABLE Users(
 		CONSTRAINT Users_Default_DateCreated DEFAULT(CURRENT_TIMESTAMP),
 	EmailVerified bit NOT NULL 
 		CONSTRAINT Users_Default_EmailVerified DEFAULT 0,
-	LatestLogin timestamp,
+	LatestLogin datetime,
 	WebsiteTheme tinyint NOT NULL 
 		CONSTRAINT Users_Default_Theme DEFAULT 0 
 		CONSTRAINT Users_CheckValid_Theme CHECK(WebsiteTheme IN (0, 1)),
