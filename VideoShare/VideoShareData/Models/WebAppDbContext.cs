@@ -47,6 +47,9 @@ public partial class WebAppDbContext : DbContext
                 .ToView("AllCourses");
 
             entity.Property(e => e.CourseId).HasColumnName("CourseID");
+            entity.Property(e => e.CourseName)
+                .HasMaxLength(100)
+                .IsUnicode(false);
             entity.Property(e => e.DateCreated).HasColumnType("date");
             entity.Property(e => e.FirstName)
                 .HasMaxLength(50)

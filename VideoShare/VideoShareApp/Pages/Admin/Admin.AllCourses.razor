@@ -8,29 +8,30 @@
 
 <h1 class:"justify-content-center" style:"text-decoration: underline">All Courses</h1>
 
-@if (Courses is null)
+@if (AllCourses is null)
 {
     <div>Loading...</div>
 }
 else
 {
-    <SfGrid @ref="courseGrid" DataSource="@Courses" AllowFiltering="true" AllowSorting="true" Width="100%">
+    <SfGrid @ref="coursesGrid" DataSource="@AllCourses" AllowFiltering="true" AllowSorting="true" Width="100%">
         <GridColumns>
-            <GridColumn Field=@nameof(Course.CourseName) HeaderText="Name" AllowSorting="true" AllowSearching="true" />
-            <GridColumn Field="Course.Owner.FullName" HeaderText="Owner" AllowSorting="true" AllowSearching="true" />
-            <GridColumn Field=@nameof(Course.DateCreated) HeaderText="Date Created" AllowSorting="true" AllowSearching="false" Format="d"/>
+            <GridColumn Field=@nameof(AllCourse.CourseName) HeaderText="Name" AllowSorting="true" AllowSearching="true"/>
+            <GridColumn Field=@nameof(AllCourse.FullName) HeaderText="Owner" AllowSorting="true" AllowSearching="true"/>
+            <GridColumn Field=@nameof(AllCourse.NumStudents) HeaderText="# Students" AllowSorting="true" AllowSearching="false" AllowFiltering="false"/>
+            <GridColumn Field=@nameof(AllCourse.NumVideos) HeaderText="# Videos" AllowSorting="true" AllowSearching="false" AllowFiltering="false"/>
+            <GridColumn Field=@nameof(AllCourse.DateCreated) HeaderText="Date Created" AllowSorting="true" AllowSearching="false" Format="d"/>
         </GridColumns>
     </SfGrid>
 }
 
 @code{
-    SfGrid<Course> courseGrid;
-    List<Course>? Courses { get; set; }
+    SfGrid<AllCourse> coursesGrid;
+    List<AllCourse>? AllCourses { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Courses = await _context.Courses
-            .Include(crs => crs.Owner) //NOTE: Issues with foreign key - just make a view for it
+        AllCourses = await _context.AllCourses//NOTE: Issues with foreign key - just make a view for it
             .ToListAsync();
     }
 }
