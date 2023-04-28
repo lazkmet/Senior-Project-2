@@ -10,8 +10,7 @@ CREATE TABLE [Messages](
 	DateCreated date NOT NULL
 		CONSTRAINT Messages_Default_DateCreated DEFAULT(CURRENT_TIMESTAMP),
 	TimeSent datetime NULL,
-	CourseCode char(6)
-		CONSTRAINT Messages_FK_CourseCode FOREIGN KEY REFERENCES Courses(CourseCode),
+	CourseCode char(6),
 	AdditionalText varchar(8000)
 );
 GO

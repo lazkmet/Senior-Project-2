@@ -22,3 +22,10 @@ CREATE TABLE Courses(
 ) 
 FILESTREAM_ON Images;
 GO
+
+CREATE VIEW AllCourses AS(
+	SELECT c.CourseID, u.FirstName, u.LastName, (SELECT COUNT(*) FROM CourseStudents cs WHERE cs.CourseID = c.CourseID) AS NumStudents, c.DateCreated
+	FROM Courses c 
+	JOIN Users u ON c.OwnerID = u.UserID
+);
+GO
