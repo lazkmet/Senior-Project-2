@@ -8,7 +8,7 @@ namespace VideoShareData.Models
 {
     public class FileStreamRowInfo
     {
-        public string path { get; set; }
+        public string? path { get; set; }
         public byte[] transactionContext { get; set; }
     }
 }

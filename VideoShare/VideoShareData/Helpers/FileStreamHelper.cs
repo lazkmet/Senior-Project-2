@@ -11,6 +11,7 @@ using VideoShareData.Models;
 using VideoShareData.Models.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.IdentityModel.Tokens;
 
 namespace VideoShareData.Helpers
 {
@@ -21,7 +22,7 @@ namespace VideoShareData.Helpers
     internal class FileStreamHelper
     {
         DbContext context { get; set; }
-        FileStreamDataObj fileDataObj { get; set; }
+        public FileStreamDataObj fileDataObj { get; set; } //Stores a reference to its object just in case
         public FileStreamRowInfo rowInfo { get; }
 
         public FileStreamHelper(DbContext initialContext, FileStreamDataObj dataObj) {
@@ -37,7 +38,10 @@ namespace VideoShareData.Helpers
                                                                         "WHERE FileGUID = @id", parameters).First();
         }
 
-        public Task<byte[]> GetFilestreamData() {
+        public Task<byte[]?> GetFilestreamData() {
+            if (rowInfo.path == null) {
+                return Task.FromResult<byte[]?>(null);
+            }
             //Code for this section developed by Daz Fuller: http://ignoringthevoices.blogspot.com/2014/01/working-with-entity-framework-code.html
             var buffer = new byte[16 * 1024];
             using (var handle = new SqlFileStream(rowInfo.path, rowInfo.transactionContext, FileAccess.Read)) {
@@ -46,12 +50,16 @@ namespace VideoShareData.Helpers
                     while ((bytesRead = handle.Read(buffer, 0, buffer.Length)) > 0) {
                         ms.Write(buffer, 0, bytesRead);
                     }
-                    return Task.FromResult(ms.ToArray());
+                    return Task.FromResult<byte[]?>(ms.ToArray());
                 }
             }
         }
 
         public Task SetFilestreamData(byte[] data) {
+            if (rowInfo.path.IsNullOrEmpty()) { 
+                /*TODO: Create blank data before streaming to the path, then retrieve the pathname
+                 Use UPDATE 0x00*/
+            }
             var buffer = new byte[16 * 1024];
             using (var handle = new SqlFileStream(rowInfo.path, rowInfo.transactionContext, FileAccess.Write))
             {

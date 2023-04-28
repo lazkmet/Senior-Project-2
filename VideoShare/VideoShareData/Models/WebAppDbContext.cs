@@ -31,9 +31,9 @@ public partial class WebAppDbContext : DbContext
 
     public virtual DbSet<Video> Videos { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    /*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:VideoShareEF");
-
+    */
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Attachment>(entity =>
@@ -66,8 +66,6 @@ public partial class WebAppDbContext : DbContext
             entity.HasIndex(e => e.CourseCode, "Courses_Unique_CourseCode").IsUnique();
 
             entity.HasIndex(e => e.FileGuid, "Courses_Unique_FileGUID").IsUnique();
-
-            entity.HasIndex(e => e.OwnerId, "Courses_Unique_OwnerID").IsUnique();
 
             entity.HasIndex(e => e.CourseCode, "Courses_idx_CourseCode");
 
