@@ -7,11 +7,10 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Data.SqlTypes;
 using System.Data.SqlClient;
-using VideoShareData.Models;
-using VideoShareData.Models.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.IdentityModel.Tokens;
+using VideoShareData.Interfaces;
 
 namespace VideoShareData.Helpers
 {

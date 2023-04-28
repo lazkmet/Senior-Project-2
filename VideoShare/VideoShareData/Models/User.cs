@@ -42,7 +42,7 @@ public partial class User : Interfaces.FileStreamDataObj
 
     public DateTime? LatestLogin { get; set; }
 
-    public virtual ICollection<Course> CoursesOwned { get; set; } = new List<Course>();
+    public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
 
     public virtual ICollection<UserxCourse> UserxCourses { get; set; } = new List<UserxCourse>();
 

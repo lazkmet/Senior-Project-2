@@ -15,6 +15,10 @@ public partial class WebAppDbContext : DbContext
     {
     }
 
+    public virtual DbSet<AllCourse> AllCourses { get; set; }
+
+    public virtual DbSet<AllUser> AllUsers { get; set; }
+
     public virtual DbSet<Attachment> Attachments { get; set; }
 
     public virtual DbSet<Course> Courses { get; set; }
@@ -31,11 +35,48 @@ public partial class WebAppDbContext : DbContext
 
     public virtual DbSet<Video> Videos { get; set; }
 
-    /*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:VideoShareEF");
-    */
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:VideoShare");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AllCourse>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("AllCourses");
+
+            entity.Property(e => e.CourseId).HasColumnName("CourseID");
+            entity.Property(e => e.DateCreated).HasColumnType("date");
+            entity.Property(e => e.FirstName)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.LastName)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<AllUser>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("AllUsers");
+
+            entity.Property(e => e.DateJoined).HasColumnType("date");
+            entity.Property(e => e.EmailAddress)
+                .HasMaxLength(254)
+                .IsUnicode(false);
+            entity.Property(e => e.FirstName)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.LastName)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.UserId)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("UserID");
+        });
+
         modelBuilder.Entity<Attachment>(entity =>
         {
             entity.HasKey(e => new { e.VideoId, e.FileName }).HasName("Attachments_PK_VideoID_FileName");
@@ -90,9 +131,7 @@ public partial class WebAppDbContext : DbContext
                 .HasColumnName("FileGUID");
             entity.Property(e => e.OwnerId).HasColumnName("OwnerID");
 
-            entity.Property(e => e.LessonLimitType).HasDefaultValueSql("((0))");
-
-            entity.HasOne(d => d.Owner).WithMany(p => p.CoursesOwned)
+            entity.HasOne(d => d.Owner).WithMany(p => p.Courses)
                 .HasForeignKey(d => d.OwnerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Courses_FK_OwnerID_Ref_UserID");
@@ -105,8 +144,7 @@ public partial class WebAppDbContext : DbContext
                 .ToView("CourseStudents");
 
             entity.Property(e => e.CourseId).HasColumnName("CourseID");
-            entity.Property(e => e.FileGuid)
-                .HasColumnName("FileGUID");
+            entity.Property(e => e.FileGuid).HasColumnName("FileGUID");
             entity.Property(e => e.FirstName)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -137,11 +175,6 @@ public partial class WebAppDbContext : DbContext
                 .HasMaxLength(254)
                 .IsUnicode(false);
             entity.Property(e => e.TimeSent).HasColumnType("datetime");
-
-            entity.HasOne(d => d.CourseCodeNavigation).WithMany(p => p.Messages)
-                .HasPrincipalKey(p => p.CourseCode)
-                .HasForeignKey(d => d.CourseCode)
-                .HasConstraintName("Messages_FK_CourseCode");
         });
 
         modelBuilder.Entity<User>(entity =>

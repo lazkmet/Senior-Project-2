@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace VideoShareData.Models.Interfaces
+namespace VideoShareData.Interfaces
 {
     internal interface FileStreamDataObj
     {
