@@ -58,6 +58,10 @@
               "target": "Package",
               "version": "[7.0.0, )"
             },
+            "Syncfusion.Blazor": {
+              "target": "Package",
+              "version": "[21.1.41, )"
+            },
             "System.Configuration.ConfigurationManager": {
               "target": "Package",
               "version": "[7.0.0, )"

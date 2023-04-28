@@ -92,8 +92,8 @@ public partial class WebAppDbContext : DbContext
 
             entity.Property(e => e.LessonLimitType).HasDefaultValueSql("((0))");
 
-            entity.HasOne(d => d.Owner).WithOne(p => p.Course)
-                .HasForeignKey<Course>(d => d.OwnerId)
+            entity.HasOne(d => d.Owner).WithMany(p => p.CoursesOwned)
+                .HasForeignKey(d => d.OwnerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Courses_FK_OwnerID_Ref_UserID");
         });

@@ -1,0 +1,44 @@
+﻿@page "/Admin/AllUsers"
+@using Microsoft.EntityFrameworkCore;
+@using VideoShareData.Models
+@using Syncfusion.Blazor.Grids
+@inject WebAppDbContext _context;
+
+<PageTitle>All Users</PageTitle>
+
+<h1 class:"align-center" style:"text-decoration: underline">All Users</h1>
+
+@if (Users is null)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <SfGrid @ref="userGrid" DataSource="@Users" AllowFiltering="true" AllowSorting="true" Width="100%">
+        <GridColumns>
+            <GridColumn Field=@nameof(User.FullName) HeaderText="Name" AllowSorting="true" AllowSearching="true" />
+            <GridColumn Field=@nameof(User.EmailAddress) HeaderText="Email Address" AllowSorting="true" AllowSearching="true" />
+            <GridColumn Field=@nameof(User.DateCreated) HeaderText="Date Joined" AllowSorting="true" AllowSearching="false" Format="d"/>
+        </GridColumns>
+    </SfGrid>
+}
+
+@code{
+    /*struct UserWithCourseData
+            {
+            User user { get; set; }
+            int courseCount { get; set; }
+            int coursesOwned { get; set; }
+    }
+    private UserWithCourseData[] Users { get; set; }*/
+    SfGrid<User> userGrid;
+    List<User>? Users { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await _context.Users.ToListAsync();
+        /*var Users = await _context.Users
+            .Select(u => new {User = u, Courses = u.UserxCourses.Count(), CoursesOwned = _context.Courses.Where(c => c.OwnerId == u.UserId).Count()})
+            .ToArrayAsync();*/
+    }
+}

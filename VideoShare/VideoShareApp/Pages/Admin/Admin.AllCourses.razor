@@ -1,0 +1,36 @@
+﻿@page "/Admin/AllCourses"
+@using Microsoft.EntityFrameworkCore;
+@using Syncfusion.Blazor.Grids;
+@using VideoShareData.Models
+@inject WebAppDbContext _context;
+
+<PageTitle>All Courses</PageTitle>
+
+<h1 class:"justify-content-center" style:"text-decoration: underline">All Courses</h1>
+
+@if (Courses is null)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <SfGrid @ref="courseGrid" DataSource="@Courses" AllowFiltering="true" AllowSorting="true" Width="100%">
+        <GridColumns>
+            <GridColumn Field=@nameof(Course.CourseName) HeaderText="Name" AllowSorting="true" AllowSearching="true" />
+            <GridColumn Field="Course.Owner.FullName" HeaderText="Owner" AllowSorting="true" AllowSearching="true" />
+            <GridColumn Field=@nameof(Course.DateCreated) HeaderText="Date Created" AllowSorting="true" AllowSearching="false" Format="d"/>
+        </GridColumns>
+    </SfGrid>
+}
+
+@code{
+    SfGrid<Course> courseGrid;
+    List<Course>? Courses { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Courses = await _context.Courses
+            .Include(crs => crs.Owner) //NOTE: Issues with foreign key - just make a view for it
+            .ToListAsync();
+    }
+}

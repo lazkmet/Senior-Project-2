@@ -20,8 +20,12 @@ build_property._RazorSourceGeneratorDebug =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Pages/AdminAllEmployees.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5BbGxFbXBsb3llZXMucmF6b3I=
+[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Pages/Admin/Admin.AllCourses.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cQWRtaW4uQWxsQ291cnNlcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Pages/Admin/Admin.AllUsers.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cQWRtaW4uQWxsVXNlcnMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Pages/Index.razor]

@@ -12,10 +12,14 @@ public partial class User : Interfaces.FileStreamDataObj
     public Guid FileGuid { get; set; }
 
     public string EmailAddress { get; set; } = null!;
-
+    [DisplayFormat(NullDisplayText = "", ApplyFormatInEditMode = true)]
     public string? FirstName { get; set; }
-
+    [DisplayFormat(NullDisplayText = "", ApplyFormatInEditMode = true)]
     public string? LastName { get; set; }
+
+    //Full Name: If both are null, return null. Else, return full name
+    [NotMapped]
+    public string FullName { get { return (FirstName is null && LastName is null) ? "" : ($"{(FirstName is null ? "" : FirstName)} {(LastName is null ? "" : LastName)}"); } }
 
     [NotMapped]
     public byte[]? ProfilePicture { get; set; }
@@ -38,7 +42,7 @@ public partial class User : Interfaces.FileStreamDataObj
 
     public DateTime? LatestLogin { get; set; }
 
-    public virtual Course? Course { get; set; }
+    public virtual ICollection<Course> CoursesOwned { get; set; } = new List<Course>();
 
     public virtual ICollection<UserxCourse> UserxCourses { get; set; } = new List<UserxCourse>();
 
