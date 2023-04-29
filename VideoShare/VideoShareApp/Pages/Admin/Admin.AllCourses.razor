@@ -1,8 +1,6 @@
 ﻿@page "/Admin/AllCourses"
-@using Microsoft.EntityFrameworkCore;
-@using Syncfusion.Blazor.Grids;
-@using VideoShareData.Models
-@inject WebAppDbContext _context;
+@using Syncfusion.Blazor.Grids
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
 
 <PageTitle>All Courses</PageTitle>
 
@@ -14,7 +12,8 @@
 }
 else
 {
-    <SfGrid @ref="coursesGrid" DataSource="@AllCourses" AllowFiltering="true" AllowSorting="true" Width="100%">
+    <SfGrid @ref="coursesGrid" DataSource="@AllCourses" AllowFiltering="true" AllowSorting="true" Width="100%" AllowPaging="true">
+        <GridPageSettings PageSize="20"></GridPageSettings>
         <GridColumns>
             <GridColumn Field=@nameof(AllCourse.CourseName) HeaderText="Name" AllowSorting="true" AllowSearching="true"/>
             <GridColumn Field=@nameof(AllCourse.FullName) HeaderText="Owner" AllowSorting="true" AllowSearching="true"/>
@@ -31,7 +30,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        AllCourses = await _context.AllCourses//NOTE: Issues with foreign key - just make a view for it
-            .ToListAsync();
+        using var context = _contextFactory.CreateDbContext();
+        AllCourses = await context.AllCourses.ToListAsync();
     }
 }

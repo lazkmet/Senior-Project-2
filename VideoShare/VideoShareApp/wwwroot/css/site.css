@@ -14,17 +14,38 @@ a, .btn-link {
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: #06C202;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 4px 10px; 
 }
+    .btn-primary:focus {
+        background-color: #06C202;
+        border: 2px solid #000000;
+        border-radius: 8px;
+        outline-color: darkgreen !important;
+        box-shadow: 0 0 0 0.2rem rgba(00, 84, 13, 0.6) !important;
+    }
+    .btn-primary:hover {
+        background-color: #14F72A;
+        border: 2px solid #000000;
+        border-radius: 8px;
+    }
+    .btn-primary:active {
+        background-color: #06C202;
+        border: 2px solid #000000;
+        border-radius: 8px;
+        outline-color: darkgreen !important;
+        box-shadow: 0 0 0 0.2rem rgba(00, 84, 13, 0.6) !important;
+    }
 
-.vertical-center {
-    margin: 0;
-    position: absolute;
-    top: 50%;
-    -ms-transform: translateY(-50%);
-    transform: translateY(-50%);
-}
+    .vertical-center {
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        -ms-transform: translateY(-50%);
+        transform: translateY(-50%);
+    }
 
 .standardGreen {
     background-color: #06C202;

@@ -3721,7 +3721,8 @@
       "Microsoft.EntityFrameworkCore.SqlServer >= 7.0.5",
       "Microsoft.EntityFrameworkCore.Tools >= 7.0.5",
       "Microsoft.Extensions.DependencyInjection >= 7.0.0",
-      "System.Data.SqlClient >= 4.8.5"
+      "System.Data.SqlClient >= 4.8.5",
+      "System.Security.Cryptography.Cng >= 5.0.0"
     ]
   },
   "packageFolders": {
@@ -3790,6 +3791,10 @@
           "System.Data.SqlClient": {
             "target": "Package",
             "version": "[4.8.5, )"
+          },
+          "System.Security.Cryptography.Cng": {
+            "target": "Package",
+            "version": "[5.0.0, )"
           }
         },
         "imports": [

@@ -11,6 +11,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.IdentityModel.Tokens;
 using VideoShareData.Interfaces;
+using VideoShareData.DTOs;
 
 namespace VideoShareData.Helpers
 {

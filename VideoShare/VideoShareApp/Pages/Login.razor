@@ -1,0 +1,120 @@
+﻿@page "/Login"
+@page "/Login/{courseCode}"
+@using VideoShareData.DTOs
+@using BlazorBootstrap
+@*@inject IAuthenticationService _authenticationService*@
+@inject IUserService _userService
+
+<PageTitle>Login</PageTitle>
+
+<div style="display:flex;flex-direction:column;margin-top:80px;align-items:center;">
+    <div style="display:flex;flex-direction:row;margin-bottom:40px;align-items:center;">
+        <h1>Video</h1>
+        <img src="logo_large.png" height="160" width="160" style="margin-left:40px;margin-right:40px;">
+        <h1>Share</h1>
+    </div>
+    <EditForm Model="@loginValues" OnValidSubmit="TryLoginAsync" style="flex-direction:column">
+        <DataAnnotationsValidator/>
+        <div style="display:flex;flex-direction:column; align-items:center;">
+            <InputText @oninput="ClearError" @bind-Value="@loginValues.EmailAddress" placeholder="Email Address" style="margin-bottom:20px" />
+            <InputText @oninput="ClearError" @bind-Value="@loginValues.Password" type="password" placeholder="Password" style="margin-bottom:20px" />
+            <div style="display:flex;flex-direction:row;align-items:center;margin-bottom:25px;">
+                <button type="submit" style="margin-right: 15px" class="btn-primary">Log In</button>
+                <button class="btn-primary" style="margin-left: 15px" @onclick="StartSignup">Sign Up</button>
+            </div>
+        </div>
+        <ValidationSummary />
+    </EditForm>
+    @if (String.IsNullOrEmpty(errorMessage) == false && offcanvasHidden)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+</div>
+
+<Offcanvas @ref="offcanvas" Placement="Placement.End" OnShown="() => offcanvasHidden = false" OnHidden="ClearSignUp">
+    <BodyTemplate>
+        <EditForm Model="@newUserValues" OnValidSubmit="TrySignupAsync" style="flex-direction:column;margin-top:80px">
+            <DataAnnotationsValidator />
+            <div style="display:flex;flex-direction:column; align-items:center;">
+                <InputText @bind-Value="@newUserValues.EmailAddress" placeholder="Email Address" style="margin-bottom:20px" />
+                <InputText @bind-Value="@newUserValues.ConfirmEmail" placeholder="Confirm Email" style="margin-bottom:20px" />
+                <InputText @bind-Value="@newUserValues.Password" type="password" placeholder="Password" style="margin-bottom:20px" />
+                <InputText @bind-Value="@newUserValues.ConfirmPassword" type="password" placeholder="Confirm Password" style="margin-bottom:20px" />
+                <div style="display:flex;flex-direction:row;align-items:center;margin-bottom:25px;">
+                    <button type="submit" style="margin-right: 15px" class="btn-primary">Sign Up</button>
+                    <button class="btn-secondary" style="margin-left: 15px" @onclick="() => offcanvas.HideAsync()">Cancel</button>
+                </div>
+            </div>
+            <ValidationSummary />
+        </EditForm>
+        @if (String.IsNullOrEmpty(errorMessage) == false && !offcanvasHidden)
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+    </BodyTemplate>
+</Offcanvas>
+
+@code{
+    [Parameter]
+    public string courseCode { get; set; }
+
+    private Offcanvas offcanvas = default!;
+    private bool offcanvasHidden = true;
+    private LoginModel loginValues = new LoginModel();
+    private NewUserModel newUserValues = new NewUserModel();
+    string? errorMessage = null;
+
+    async Task TryLoginAsync()
+    {
+        //returns the user by their email and password, if one exists
+        var user = await _userService.GetUserByLoginAsync(loginValues);
+        if (user is not null)
+        {
+            //await _authenticationService.Login(user);
+            //TODO: Transfer to home page, or myCourses/{courseCode} if code is not null
+            //The following code is temporary
+            errorMessage = $"Login Successful for {loginValues.EmailAddress}, {loginValues.Password}";
+            StateHasChanged();
+        }
+        else
+        {
+            errorMessage = "Could not find the specified user or password was incorrect.";
+            StateHasChanged();
+        }
+    }
+
+    void ClearError()
+    {
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    async Task StartSignup()
+    {
+        await offcanvas.ShowAsync();
+    }
+
+    void ClearSignUp()
+    {
+        newUserValues.Password = "";
+        newUserValues.ConfirmPassword = "";
+        newUserValues.EmailAddress = "";
+        newUserValues.ConfirmEmail = "";
+        offcanvasHidden = true;
+    }
+
+    async Task TrySignupAsync()
+    {
+        errorMessage = $"Signing up with Email: {newUserValues.ConfirmEmail} and Password: {newUserValues.ConfirmPassword}";
+        try
+        {
+            var newUserID = await _userService.CreateUserAsync(newUserValues);
+            await offcanvas.HideAsync();
+            errorMessage = "Signup Successful.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

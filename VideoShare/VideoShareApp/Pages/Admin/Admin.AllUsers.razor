@@ -1,24 +1,25 @@
 ﻿@page "/Admin/AllUsers"
-@using Microsoft.EntityFrameworkCore;
-@using VideoShareData.Models
 @using Syncfusion.Blazor.Grids
-@inject WebAppDbContext _context;
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
 
 <PageTitle>All Users</PageTitle>
 
 <h1 class:"align-center" style:"text-decoration: underline">All Users</h1>
 
-@if (Users is null)
+@if (AllUsers is null)
 {
     <div>Loading...</div>
 }
 else
 {
-    <SfGrid @ref="userGrid" DataSource="@Users" AllowFiltering="true" AllowSorting="true" Width="100%">
+    <SfGrid @ref="usersGrid" DataSource="@AllUsers" AllowFiltering="true" AllowSorting="true" Width="100%" AllowPaging="true">
+        <GridPageSettings PageSize="20"></GridPageSettings>
         <GridColumns>
-            <GridColumn Field=@nameof(User.FullName) HeaderText="Name" AllowSorting="true" AllowSearching="true" />
-            <GridColumn Field=@nameof(User.EmailAddress) HeaderText="Email Address" AllowSorting="true" AllowSearching="true" />
-            <GridColumn Field=@nameof(User.DateCreated) HeaderText="Date Joined" AllowSorting="true" AllowSearching="false" Format="d"/>
+            <GridColumn Field=@nameof(AllUser.FullName) HeaderText="Name" AllowSorting="true" AllowSearching="true" />
+            <GridColumn Field=@nameof(AllUser.EmailAddress) HeaderText="Email Address" AllowSorting="true" AllowSearching="true" />
+            <GridColumn Field=@nameof(AllUser.CoursesOwned) HeaderText="Courses Owned" AllowSorting="true" AllowSearching="false" AllowFiltering="false"/>
+            <GridColumn Field=@nameof(AllUser.CoursesJoined) HeaderText="Courses Joined" AllowSorting="true" AllowSearching="false" AllowFiltering="false"/>
+            <GridColumn Field=@nameof(AllUser.DateJoined) HeaderText="Date Joined" AllowSorting="true" AllowSearching="false" Format="d"/>
         </GridColumns>
     </SfGrid>
 }
@@ -31,14 +32,12 @@ else
             int coursesOwned { get; set; }
     }
     private UserWithCourseData[] Users { get; set; }*/
-    SfGrid<User> userGrid;
-    List<User>? Users { get; set; }
+    SfGrid<AllUser> usersGrid;
+    List<AllUser>? AllUsers { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Users = await _context.Users.ToListAsync();
-        /*var Users = await _context.Users
-            .Select(u => new {User = u, Courses = u.UserxCourses.Count(), CoursesOwned = _context.Courses.Where(c => c.OwnerId == u.UserId).Count()})
-            .ToArrayAsync();*/
+        using var context = _contextFactory.CreateDbContext();
+        AllUsers = await context.AllUsers.ToListAsync();
     }
 }
