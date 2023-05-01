@@ -8,6 +8,11 @@ using Syncfusion.Blazor;
 using System.Drawing.Text;
 using VideoShareData.Services;
 using BlazorBootstrap;
+using System.Security.Claims;
+using VideoShareData.Enums;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Components.Authorization;
+using VideoShareApp.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,13 +24,15 @@ builder.Services.AddBlazorBootstrap();
 builder.Services.AddDbContextFactory<WebAppDbContext>(options => {
     options.UseSqlServer(builder.Configuration.GetConnectionString("VideoShare"));
 });
+builder.Services.AddScoped<ProtectedSessionStorage>();
+builder.Services.AddScoped<AuthenticationStateProvider, UserAuthenticationProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
+//Set up needed components for Authentication
+SetupAuthentication(builder.Services);
+
 
 //Register Syncfusion
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(builder.Configuration.GetValue<string>("Syncfusion"));
-
-//Set up needed components for Authentication
-SetupAuthentication(builder.Services);
 
 var app = builder.Build();
 
@@ -49,6 +56,9 @@ app.MapFallbackToPage("/_Host");
 app.Run();
 
 void SetupAuthentication(IServiceCollection services)
-{ 
-
+{
+    services.AddAuthenticationCore();
+    services.AddAuthorization(options => {
+        options.AddPolicy("AdminOnly", policy => policy.RequireClaim(ClaimTypes.Role, UserType.Admin.ToString()));
+    });
 }

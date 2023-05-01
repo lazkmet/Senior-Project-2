@@ -1,5 +1,6 @@
 ﻿@page "/Admin/AllCourses"
 @using Syncfusion.Blazor.Grids
+@inject AuthenticationStateProvider authProvider
 @inject IDbContextFactory<WebAppDbContext> _contextFactory
 
 <PageTitle>All Courses</PageTitle>

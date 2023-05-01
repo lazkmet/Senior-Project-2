@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using VideoShareData.Enums;
 
 namespace VideoShareData.Models;
 
@@ -22,7 +23,7 @@ public partial class Course : Interfaces.FileStreamDataObj
     [NotMapped]
     public byte[]? CourseImage { get; set; }
 
-    public byte LessonLimitType { get; set; }
+    public LessonLimitType LessonLimitType { get; set; }
 
     public DateTime DateCreated { get; set; }
 

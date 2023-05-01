@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using VideoShareData.Enums;
 
 namespace VideoShareData.Models;
 
@@ -17,7 +18,7 @@ public partial class Video : Interfaces.FileStreamDataObj
 
     public short OrderInCourse { get; set; }
 
-    public byte VideoType { get; set; }
+    public VideoType VideoType { get; set; }
 
     public string? YtvideoUrl { get; set; }
 

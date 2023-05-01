@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace VideoShareData.Models;
 
@@ -132,6 +133,7 @@ public partial class WebAppDbContext : DbContext
             entity.Property(e => e.FileGuid)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("FileGUID");
+            entity.Property(e => e.LessonLimitType).HasConversion<byte>();
             entity.Property(e => e.OwnerId).HasColumnName("OwnerID");
 
             entity.HasOne(d => d.Owner).WithMany(p => p.Courses)
@@ -174,6 +176,8 @@ public partial class WebAppDbContext : DbContext
             entity.Property(e => e.DateCreated)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("date");
+            entity.Property(e => e.MessageType)
+                .HasConversion<int>();
             entity.Property(e => e.RecipientEmail)
                 .HasMaxLength(254)
                 .IsUnicode(false);
@@ -191,7 +195,9 @@ public partial class WebAppDbContext : DbContext
             entity.HasIndex(e => e.EmailAddress, "Users_idx_EmailAddress");
 
             entity.Property(e => e.UserId).HasColumnName("UserID");
-            entity.Property(e => e.CourseOrdering).HasDefaultValueSql("((2))");
+            entity.Property(e => e.CourseOrdering)
+                .HasDefaultValueSql("((2))")
+                .HasConversion<byte>();
             entity.Property(e => e.DateCreated)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("date");
@@ -208,7 +214,11 @@ public partial class WebAppDbContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.LatestLogin).HasColumnType("datetime");
-            entity.Property(e => e.StudentOrdering).HasDefaultValueSql("((1))");
+            entity.Property(e => e.StudentOrdering)
+                .HasDefaultValueSql("((1))")
+                .HasConversion<byte>();
+            entity.Property(e => e.UserType).HasConversion<byte>();
+            entity.Property(e => e.WebsiteTheme).HasConversion<byte>();
         });
 
         modelBuilder.Entity<UserxCourse>(entity =>
@@ -273,6 +283,7 @@ public partial class WebAppDbContext : DbContext
             entity.Property(e => e.VideoTitle)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.VideoType).HasConversion<byte>();
             entity.Property(e => e.YtuseDescription).HasColumnName("YTUseDescription");
             entity.Property(e => e.YtvideoUrl)
                 .HasMaxLength(255)

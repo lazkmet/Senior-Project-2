@@ -1,9 +1,11 @@
 ﻿@page "/Login"
-@page "/Login/{courseCode}"
+@page "/Login/{returnUri}"
 @using VideoShareData.DTOs
 @using BlazorBootstrap
-@*@inject IAuthenticationService _authenticationService*@
+@using VideoShareApp.Authentication
+@inject AuthenticationStateProvider _AuthStateProvider
 @inject IUserService _userService
+@inject NavigationManager _navManager
 
 <PageTitle>Login</PageTitle>
 
@@ -56,7 +58,7 @@
 
 @code{
     [Parameter]
-    public string courseCode { get; set; }
+    public string returnUri {get; set;}
 
     private Offcanvas offcanvas = default!;
     private bool offcanvasHidden = true;
@@ -64,17 +66,20 @@
     private NewUserModel newUserValues = new NewUserModel();
     string? errorMessage = null;
 
+    protected override void OnParametersSet()
+    {
+        if (returnUri is null) { returnUri = ""; }
+    }
+
     async Task TryLoginAsync()
     {
         //returns the user by their email and password, if one exists
         var user = await _userService.GetUserByLoginAsync(loginValues);
         if (user is not null)
         {
-            //await _authenticationService.Login(user);
-            //TODO: Transfer to home page, or myCourses/{courseCode} if code is not null
-            //The following code is temporary
-            errorMessage = $"Login Successful for {loginValues.EmailAddress}, {loginValues.Password}";
-            StateHasChanged();
+            var userAuthProvider = (UserAuthenticationProvider)_AuthStateProvider;
+            await userAuthProvider.Login(user);
+            _navManager.NavigateTo(_navManager.BaseUri + returnUri, false, true);
         }
         else
         {

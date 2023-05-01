@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using VideoShareData.DTOs;
 using VideoShareData.Helpers;
 using VideoShareData.Models;
+using VideoShareData.Enums;
 
 namespace VideoShareData.Services
 {
@@ -50,7 +51,7 @@ namespace VideoShareData.Services
             {
                 EmailAddress = newUserValues.ConfirmEmail,
                 EncryptedPassword = EncryptionHelper.CreatePasswordHash(newUserValues.ConfirmPassword),
-                UserType = 1
+                UserType = UserType.Standard
             };
             context.Add(newUser);
             await context.SaveChangesAsync(); //Save Changes updates the ID of the new user

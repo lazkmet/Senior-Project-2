@@ -5,6 +5,7 @@ CREATE TABLE [Messages](
 	MessageID int IDENTITY(1, 1)
 		CONSTRAINT Messages_PK_MessageID PRIMARY KEY,
 	MessageType int NOT NULL
+		CONSTRAINT Messages_Default_MessageType DEFAULT(0)
 		CONSTRAINT Messages_CheckValid_MessageType CHECK(MessageType IN (0, 1, 2)),
 	RecipientEmail varchar(254) NOT NULL,
 	DateCreated date NOT NULL

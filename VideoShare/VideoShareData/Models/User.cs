@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using VideoShareData.Enums;
 
 namespace VideoShareData.Models;
 
@@ -24,19 +25,19 @@ public partial class User : Interfaces.FileStreamDataObj
     [NotMapped]
     public byte[]? ProfilePicture { get; set; }
 
-    public byte UserType { get; set; }
+    public UserType UserType { get; set; }
 
     public DateTime DateCreated { get; set; }
 
     public bool EmailVerified { get; set; }
 
-    public byte WebsiteTheme { get; set; }
+    public WebsiteTheme WebsiteTheme { get; set; }
 
     public byte MinTextSize { get; set; }
 
-    public byte CourseOrdering { get; set; }
+    public SortOrder CourseOrdering { get; set; }
 
-    public byte StudentOrdering { get; set; }
+    public SortOrder StudentOrdering { get; set; }
 
     public byte[] EncryptedPassword { get; set; } = null!;
 
