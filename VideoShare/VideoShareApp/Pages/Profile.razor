@@ -37,15 +37,15 @@ else
                     </div>
                 </div>
                 <div class="input-group" style="margin-bottom:20px; align-items:center">
-                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Email Address</div>
+                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Email Address:</div>
                     <input type="text" class="form-control" style="pointer-events:none;" placeholder="No Email Address" value=@currentUser.EmailAddress readonly />
                 </div>
                 <div class="input-group" style="margin-bottom:20px; align-items:center">
-                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Joined</div>
+                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Joined:</div>
                     <input type="text" class="form-control" style="pointer-events:none;max-width:140px;" placeholder="0/0/00" value=@currentUser.DateCreated.ToShortDateString() readonly />
                 </div>
                 <div class="input-group" style="margin-bottom:20px; align-items:center">
-                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Courses Completed</div>
+                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Courses Completed:</div>
                     <input type="text" class="form-control" placeholder="No Data" style="pointer-events:none;max-width:50px; padding-right:5px;" value=@coursesCompleted readonly />
                 </div>
                 <div style="display:flex; flex-direction:row;">
@@ -97,7 +97,21 @@ else
         </Offcanvas>
         <Offcanvas @ref="editProfileOffcanvas" Placement="Placement.Start" OnHidden="ClearOffcanvas">
             <BodyTemplate>
-
+                <EditForm Model="@editUserModel" OnValidSubmit="TryUpdateUserAsync" style="flex-direction:column; margin-top:20%;">
+                    <DataAnnotationsValidator />
+                    <div style="text-align:center;margin-bottom:10px;">Fill out a form field to change its value in your profile. Empty fields will be left unchanged.</div>
+                    <div style="display:flex;flex-direction:column; align-items:center;">
+                        <InputText @bind-Value="@editUserModel.EmailAddress" placeholder="Email Address" style="margin-bottom:20px" />
+                        <InputText @bind-Value="@editUserModel.ConfirmEmail" placeholder="Confirm New Email" style="margin-bottom:20px" />
+                        <InputText @bind-Value="@editUserModel.FirstName" placeholder="First Name" style="margin-bottom:20px" />
+                        <InputText @bind-Value="@editUserModel.LastName" placeholder="Last Name" style="margin-bottom:20px" />
+                        <div style="display:flex;flex-direction:row;align-items:center;margin-bottom:25px;">
+                            <button type="submit" style="margin-right: 15px" class="btn-primary">Confirm</button>
+                            <button type="button" class="btn-secondary" style="margin-left: 15px" @onclick="() => editProfileOffcanvas.HideAsync()">Cancel</button>
+                        </div>
+                    </div>
+                    <ValidationSummary />
+                </EditForm>
             </BodyTemplate>
         </Offcanvas>
     }
@@ -195,6 +209,57 @@ else
         else
         {
             errorMessage = "Could not change password: current password was incorrect.";
+        }
+        await passwordOffcanvas.HideAsync();
+    }
+
+    async Task TryUpdateUserAsync()
+    {
+        List<string> updatedAttributes = new List<string>();
+        errorMessage = null;
+        if (!string.IsNullOrWhiteSpace(editUserModel.ConfirmEmail))
+        {
+            using var context = _contextFactory.CreateDbContext();
+            //If a user exists with that email
+            if (context.Users.Where(x => x.EmailAddress == editUserModel.ConfirmEmail).FirstOrDefault() is not null)
+            {
+                errorMessage = "Cannot change email: address in use";
+                await editProfileOffcanvas.HideAsync();
+                return;
+            }
+            else
+            {
+                currentUser.EmailAddress = editUserModel.ConfirmEmail;
+                updatedAttributes.Add("EmailAddress");
+            }
+        }
+        if (!string.IsNullOrWhiteSpace(editUserModel.FirstName))
+        {
+            currentUser.FirstName = editUserModel.FirstName;
+            updatedAttributes.Add("FirstName");
+        }
+        if (!string.IsNullOrWhiteSpace(editUserModel.LastName))
+        {
+            currentUser.LastName = editUserModel.LastName;
+            updatedAttributes.Add("LastName");
+        }
+        //After checking every attribute, see if any have been updated. If so, propagate changes to the database.
+        if (updatedAttributes.Count > 0)
+        {
+            await _userService.UpdateUserAsync(currentUser, updatedAttributes);
+            errorMessage = "The following attributes were successfully changed: ";
+            foreach (string s in updatedAttributes)
+            {
+                errorMessage += s;
+                if (s != updatedAttributes.Last())
+                {
+                    errorMessage += ", ";
+                }
+            }
+        }
+        else
+        {
+            errorMessage = "Profile has not been changed.";
         }
         await passwordOffcanvas.HideAsync();
     }
