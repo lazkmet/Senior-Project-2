@@ -1,5 +1,9 @@
 ﻿@page "/Profile"
 @using VideoShareData.Helpers
+@using Syncfusion.Blazor.DropDowns
+@using VideoShareData.Enums
+@using BlazorBootstrap
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
 @inject AuthenticationStateProvider _authContext
 @inject IUserService _userService
 
@@ -18,46 +22,188 @@ else
     }
     else
     {
-        <div style="display:flex; flex-direction:row; padding-top:50px;padding-left:5%;padding-right:5%">
+        <div style="display:flex; flex-direction:row; padding-top:50px;padding-left:5%;padding-right:5%;justify-content:center;">
             <div style="width:60%;">
                 <div style="display:flex; flex-direction:row; align-items:center; margin-bottom:20px;">
                     <ProfilePicture UserId="@currentUser.UserId" Width=150 Height=150/>
                     <div style="width:100%;margin-left:30px;">
-                        <div style="margin-bottom:10px;font-size:36px;text-align:center;height:4rem;border:3px solid #037C00;border-radius:15px;">@currentUser.FullName</div>
+                        <div style="margin-bottom:10px;font-size:36px;text-align:center;height:4rem;border:3px solid #037C00;border-radius:15px;pointer-events:none;">@currentUser.FullName</div>
                         <div style="display:flex; flex-direction:row;">
-                            <button class="btn-primary" @onclick=ChangePFP style="max-width:30%;font-size:16px;">Change Profile Picture</button>
-                            <div style="margin-left:auto;max-width:40%; padding-left:20px; padding-right:20px; text-align:center; height: fit-content; background-color:#35DAFE;border: 2px solid #000000;border-radius: 6px;">
+                            @*<button class="btn-primary" @onclick=ChangePFP style="max-width:30%;font-size:16px;">Change Profile Picture</button>
+                                Keep this out until PFP changing is added*@
+                            <div style="margin-left:auto;max-width:40%; padding-left:20px; padding-right:20px; text-align:center; height: fit-content; background-color:#35DAFE;border: 2px solid #000000;border-radius: 6px;pointer-events:none;">
                                 @currentUser.UserType.ToString()</div>
                         </div>
                     </div>
                 </div>
+                <div class="input-group" style="margin-bottom:20px; align-items:center">
+                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Email Address</div>
+                    <input type="text" class="form-control" style="pointer-events:none;" placeholder="No Email Address" value=@currentUser.EmailAddress readonly />
+                </div>
+                <div class="input-group" style="margin-bottom:20px; align-items:center">
+                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Joined</div>
+                    <input type="text" class="form-control" style="pointer-events:none;max-width:140px;" placeholder="0/0/00" value=@currentUser.DateCreated.ToShortDateString() readonly />
+                </div>
+                <div class="input-group" style="margin-bottom:20px; align-items:center">
+                    <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Courses Completed</div>
+                    <input type="text" class="form-control" placeholder="No Data" style="pointer-events:none;max-width:50px; padding-right:5px;" value=@coursesCompleted readonly />
+                </div>
+                <div style="display:flex; flex-direction:row;">
+                    <button class="btn-primary" @onclick=StartChangePassword style="max-width:30%;font-size:18px;">Change Password</button>
+                    <button class="btn-primary" @onclick=StartEditProfile style="margin-left:auto;max-width:40%; padding-left:20px; padding-right:20px; text-align:center; height: fit-content;">Edit Profile</button>
+                </div>
             </div>
-            @if(true){
+            @if(settingsImplemented){
                 <div class="standardGreen" style="width:2px;margin-left:30px;margin-right:30px;"/>
                 <div style="width:stretch;">
-
+                    <h2 style="margin-top:20px;">Preferences</h2>
+                    <EditForm Model="@websiteSettings" @onchange="UpdateSettingsAsync">
+                        <div class="row">
+                            <div class="form-label">Website Theme</div>
+                            <SfDropDownList @bind-Value="websiteSettings.userTheme" style="margin-bottom:20px;" TItem="WebsiteThemeItem" TValue="WebsiteTheme" DataSource="@websiteThemes">
+                                <DropDownListFieldSettings Text="Name" Value="theme"></DropDownListFieldSettings>
+                            </SfDropDownList>
+                        </div>
+                        <div class="row">
+                            <div class="form-label">Minimum Text Size</div>
+                            <SfDropDownList @bind-Value="websiteSettings.minTextSize" TItem="int" TValue="int" DataSource="@fontSizeValues">
+                            </SfDropDownList>
+                        </div>
+                    </EditForm>
                 </div>
             }
         </div>
+        @if (String.IsNullOrEmpty(errorMessage) == false)
+        {
+            <div class="alert alert-danger" style="align-self:center; margin-top:10px;">@errorMessage</div>
+        }
+
+        <Offcanvas @ref="passwordOffcanvas" Placement="Placement.Start" OnHidden="ClearOffcanvas">
+            <BodyTemplate>
+                <EditForm Model="@passwordChangeModel" OnValidSubmit="TryUpdatePasswordAsync" style="flex-direction:column; margin-top:40%;">
+                    <DataAnnotationsValidator />
+                    <div style="display:flex;flex-direction:column; align-items:center;">
+                        <InputText @bind-Value="@passwordChangeModel.currentPassword" type="password" placeholder="Current Password" style="margin-bottom:20px" />
+                        <InputText @bind-Value="@passwordChangeModel.newPassword" type="password" placeholder="New Password" style="margin-bottom:20px" />
+                        <InputText @bind-Value="@passwordChangeModel.confirmNewPassword" type="password" placeholder="Confirm New Password" style="margin-bottom:20px" />
+                        <div style="display:flex;flex-direction:row;align-items:center;margin-bottom:25px;">
+                            <button type="submit" style="margin-right: 15px" class="btn-primary">Confirm</button>
+                            <button type="button" class="btn-secondary" style="margin-left: 15px" @onclick="() => passwordOffcanvas.HideAsync()">Cancel</button>
+                        </div>
+                    </div>
+                    <ValidationSummary />
+                </EditForm>
+            </BodyTemplate>
+        </Offcanvas>
+        <Offcanvas @ref="editProfileOffcanvas" Placement="Placement.Start" OnHidden="ClearOffcanvas">
+            <BodyTemplate>
+
+            </BodyTemplate>
+        </Offcanvas>
     }
 }
 
 @code {
-    //Delete this and remove the check once User Preferences affect the website
-    private bool settingsImplemented = false;
+    private Offcanvas passwordOffcanvas = default!;
+    private Offcanvas editProfileOffcanvas = default!;
     private User? currentUser;
     private bool loading = true;
+    string? errorMessage = null;
+    private int coursesCompleted = 0;
+    private PasswordChangeModel passwordChangeModel = new PasswordChangeModel();
+    private EditUserModel editUserModel = new EditUserModel();
+
+    //Delete this and remove the check once User Preferences affect the website
+    private bool settingsImplemented = false;
+    private WebsiteSettingsModel websiteSettings = new WebsiteSettingsModel();
+    public List<int> fontSizeValues = new List<int>() { 0, 12, 14, 18, 24, 36 };
+
+    public class WebsiteThemeItem
+    {
+        public string Name { get; set; }
+        public WebsiteTheme theme { get; set; }
+    }
+    public List<WebsiteThemeItem> websiteThemes = new List<WebsiteThemeItem>()
+    {
+        new WebsiteThemeItem(){ Name="Light", theme=WebsiteTheme.Light},
+        new WebsiteThemeItem(){ Name="Dark", theme=WebsiteTheme.Dark}
+    };
 
     protected override async Task OnInitializedAsync()
     {
         int Id = ClaimsHelper.getUserID(await _authContext.GetAuthenticationStateAsync());
         currentUser = await _userService.GetUserByIdAsync(Id);
+        if (currentUser is not null)
+        {
+            websiteSettings.userTheme = currentUser.WebsiteTheme;
+            websiteSettings.minTextSize = currentUser.MinTextSize;
+        }
         loading = false;
         StateHasChanged();
+    }
+
+    private async Task UpdateSettingsAsync()
+    {
+        /* THIS STAYS COMMENTED OUT UNTIL SETTINGS ARE IMPLEMENTED
+        var propertiesUpdated = new List<string>() { "WebsiteTheme", "MinTextSize" };
+        //reference is not null because this can only be called by a component that gets rendered when user is not null
+        currentUser.WebsiteTheme = websiteSettings.userTheme;
+        currentUser.MinTextSize = (byte)websiteSettings.minTextSize;
+        await _userService.UpdateUserAsync(currentUser, propertiesUpdated);
+    */
     }
 
     private void ChangePFP()
     {
         //NOT YET IMPLEMENTED
+    }
+
+    async Task StartChangePassword()
+    {
+        errorMessage = null;
+        await passwordOffcanvas.ShowAsync();
+    }
+
+    async Task StartEditProfile()
+    {
+        errorMessage = null;
+        await editProfileOffcanvas.ShowAsync();
+    }
+
+    async Task TryUpdatePasswordAsync()
+    {
+        errorMessage = null;
+        var login = new LoginModel()
+            {
+                EmailAddress = currentUser.EmailAddress,
+                Password = passwordChangeModel.currentPassword ?? ""
+            };
+        //Check that user provided the correct password
+        var user = await _userService.GetUserByLoginAsync(login);
+        if (user is not null)
+        {
+            try
+            {
+                currentUser = await _userService.UpdatePasswordAsync(currentUser, passwordChangeModel.confirmNewPassword);
+                errorMessage = "Password changed successfully.";
+            }
+            catch
+            {
+                errorMessage = "Unexpected error communicating with database. Password may or may not have been updated.";
+            }
+        }
+        else
+        {
+            errorMessage = "Could not change password: current password was incorrect.";
+        }
+        await passwordOffcanvas.HideAsync();
+    }
+
+    void ClearOffcanvas()
+    {
+        passwordChangeModel.currentPassword = "";
+        passwordChangeModel.newPassword = "";
+        passwordChangeModel.confirmNewPassword = "";
+        editUserModel = new EditUserModel();
     }
 }

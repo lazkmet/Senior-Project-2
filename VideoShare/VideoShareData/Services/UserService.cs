@@ -18,6 +18,8 @@ namespace VideoShareData.Services
         Task<User?> GetUserByLoginAsync(LoginModel loginValues);
         Task<int> CreateUserAsync(NewUserModel newUser);
         Task<User?> GetUserByIdAsync(int userIdParam);
+        Task<User> UpdateUserAsync(User userToUpdate, List<string> propertiesUpdated);
+        Task<User> UpdatePasswordAsync(User userToUpdate, string newPassword);
         //TODO: Delete User Async
     }
     public class UserService : IUserService
@@ -64,6 +66,24 @@ namespace VideoShareData.Services
             await context.SaveChangesAsync(); //Save Changes updates the ID of the new user
 
             return newUser.UserId;
+        }
+
+        public async Task<User> UpdateUserAsync(User userToUpdate, List<string> propertiesUpdated) {
+            using var context = _contextFactory.CreateDbContext();
+            context.Attach(userToUpdate);
+            if (propertiesUpdated.Count > 0) {
+                propertiesUpdated.ForEach(x => context.Entry(userToUpdate).Property(x).IsModified = true);
+            }
+            await context.SaveChangesAsync();
+            return userToUpdate;
+        }
+        public async Task<User> UpdatePasswordAsync(User userToUpdate, string newPassword) {
+            using var context = _contextFactory.CreateDbContext();
+            context.Attach(userToUpdate);
+            userToUpdate.EncryptedPassword = EncryptionHelper.CreatePasswordHash(newPassword);
+            context.Entry(userToUpdate).Property("EncryptedPassword").IsModified = true;
+            await context.SaveChangesAsync();
+            return userToUpdate;
         }
     }
 }

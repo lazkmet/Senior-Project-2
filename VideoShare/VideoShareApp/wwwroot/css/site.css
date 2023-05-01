@@ -8,6 +8,12 @@ h1:focus {
     outline: none;
 }
 
+h2 {
+    font-size:20px;
+    text-decoration:underline;
+    padding-bottom:20px;
+}
+
 a, .btn-link {
     color: #0071c1;
 }
@@ -38,6 +44,33 @@ a, .btn-link {
         outline-color: darkgreen !important;
         box-shadow: 0 0 0 0.2rem rgba(00, 84, 13, 0.6) !important;
     }
+.btn-secondary {
+    color: #fff;
+    background-color: #F14F1C;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 4px 10px;
+}
+    .btn-secondary:focus {
+        background-color: #F14F1C;
+        border: 2px solid #000000;
+        border-radius: 8px;
+        outline-color: darkred !important;
+        box-shadow: 0 0 0 0.2rem rgba(195, 47, 0, 0.55) !important;
+    }
+    .btn-secondary:hover {
+        background-color: #FE825B;
+        border: 2px solid #000000;
+        border-radius: 8px;
+    }
+    .btn-secondary:active {
+        background-color: #F14F1C;
+        border: 2px solid #000000;
+        border-radius: 8px;
+        outline-color: darkred !important;
+        box-shadow: 0 0 0 0.2rem rgba(195, 47, 0, 0.55) !important;
+    }
+
 
     .vertical-center {
         margin: 0;
