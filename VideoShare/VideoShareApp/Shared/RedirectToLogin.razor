@@ -1,0 +1,9 @@
+﻿@inject NavigationManager _navManager
+
+@code {
+    protected override void OnAfterRender(bool firstRender)
+    {
+        var returnUri = _navManager.ToBaseRelativePath(_navManager.Uri);
+        _navManager.NavigateTo(_navManager.BaseUri+ "Login/" + returnUri ?? "");
+    }
+}

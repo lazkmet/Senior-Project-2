@@ -1,33 +1,37 @@
-﻿<div class="top-row ps-3 navbar">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">VideoShare</a>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3" style="border-radius: 9px;">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-            @*IMPORTANT: YOU CAN NEST AUTHORIZEVIEW COMPONENTS, BUT MUST SPECIFY Context="SomeOtherName"*@
-            @if (userIsAdmin) {
-                <NavLink class="nav-link" href="/Admin/AllUsers">
-                    <span class="oi oi-people" aria-hidden="true"></span> All Users
-                </NavLink>
-                <NavLink class="nav-link" href="/Admin/AllCourses">
-                    <span class="oi oi-list" aria-hidden="true"></span> All Courses
-                </NavLink>
-            }
+﻿<AuthorizeView>
+    <Authorized>
+        <div class="top-row ps-3 navbar">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="">VideoShare</a>
+            </div>
         </div>
-    </nav>
-</div>
-<button title="Navigation menu" class="navbar-toggler" style="position:relative;width:80%;background-color:#e5e5e5;left:20%;margin-bottom:5px;height:20px" @onclick="ToggleNavMenu">
-    <span class=@("oi " + NavMenuCollapseIcon) style="color:#969696;"></span>
-</button>
+
+        <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+            <nav class="flex-column">
+                <div class="nav-item px-3" style="border-radius: 9px;">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Home
+                    </NavLink>
+                    <AuthorizeView Context="SubContext" Roles="Admin">
+                        <Authorized>
+                            <NavLink class="nav-link" href="/Admin/AllUsers">
+                                <span class="oi oi-people" aria-hidden="true"></span> All Users
+                            </NavLink>
+                            <NavLink class="nav-link" href="/Admin/AllCourses">
+                                <span class="oi oi-list" aria-hidden="true"></span> All Courses
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
+                </div>
+            </nav>
+        </div>
+        <button title="Navigation menu" class="navbar-toggler" style="position:relative;width:80%;background-color:#e5e5e5;left:20%;margin-bottom:5px;height:20px" @onclick="ToggleNavMenu">
+            <span class=@("oi " + NavMenuCollapseIcon) style="color:#969696;"></span>
+        </button>
+    </Authorized>
+</AuthorizeView>
 
 @code {
-    private bool userIsAdmin = true;
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;

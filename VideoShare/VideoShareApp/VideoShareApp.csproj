@@ -22,8 +22,4 @@
     <ProjectReference Include="..\VideoShareData\VideoShareData.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Components\" />
-  </ItemGroup>
-
 </Project>

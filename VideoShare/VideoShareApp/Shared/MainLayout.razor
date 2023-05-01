@@ -8,19 +8,18 @@
         <NavMenu />
     </div>
     <div class="page">
-        <header class="standardGreen" style="height:2rem">
-            <div class ="vertical-center" style="color:white;position:relative;padding-left:20px">
-                Video Share
-            </div>
-        </header>
-        <main>
-            <article class="content px-4">
-                @Body
-            </article>
-        </main>
+        <AppHeader />
+        <AuthorizeView>
+            <Authorized>
+                <main>
+                    <article class="content px-4">
+                        @Body
+                    </article>
+                </main>
+            </Authorized>
+            <NotAuthorized>
+                <RedirectToLogin/>
+            </NotAuthorized>
+        </AuthorizeView>
     </div>
 </div>
-
-@code{
-    string adminHeader = "standardGreen"; //use standardGreen or adminRed depending on user
-}

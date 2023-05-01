@@ -1,5 +1,7 @@
 ﻿@page "/Login"
-@page "/Login/{returnUri}"
+@page "/Login/{*returnUri}"
+@layout AnonLayout
+@attribute [AllowAnonymous]
 @using VideoShareData.DTOs
 @using BlazorBootstrap
 @using VideoShareApp.Authentication
@@ -58,7 +60,7 @@
 
 @code{
     [Parameter]
-    public string returnUri {get; set;}
+    public string? returnUri {get; set;}
 
     private Offcanvas offcanvas = default!;
     private bool offcanvasHidden = true;

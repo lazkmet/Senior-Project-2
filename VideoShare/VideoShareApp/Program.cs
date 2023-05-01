@@ -52,6 +52,7 @@ app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+app.MapFallbackToPage("/Login/{*returnUri}", "/_Host");
 
 app.Run();
 

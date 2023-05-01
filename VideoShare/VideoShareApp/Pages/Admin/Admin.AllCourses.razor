@@ -1,5 +1,7 @@
 ﻿@page "/Admin/AllCourses"
+@attribute [Authorize(Roles = "Admin")]
 @using Syncfusion.Blazor.Grids
+@using VideoShareData.Enums
 @inject AuthenticationStateProvider authProvider
 @inject IDbContextFactory<WebAppDbContext> _contextFactory
 
