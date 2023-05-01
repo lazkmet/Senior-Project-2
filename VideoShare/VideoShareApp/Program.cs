@@ -26,7 +26,7 @@ builder.Services.AddDbContextFactory<WebAppDbContext>(options => {
 });
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, UserAuthenticationProvider>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddTransient<IUserService, UserService>();
 //Set up needed components for Authentication
 SetupAuthentication(builder.Services);
 

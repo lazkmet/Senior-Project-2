@@ -1,0 +1,18 @@
+﻿<img src="@PhotoURL" height="@Height" width="@Width" 
+    style="background-color:white;border: 3px solid #015151;border-radius: 50%;" title="Profile Picture for User @UserId"/>
+
+@code {
+    [Parameter]
+    public int UserId { get; set; }
+    [Parameter]
+    public int Height { get; set; }
+    [Parameter]
+    public int Width { get; set; }
+
+    private string PhotoURL = "default_pfp.png";
+
+    /*protected override async Task OnParametersSetAsync()
+    {
+        //TODO: Set URL from photo cache management
+    }*/
+}

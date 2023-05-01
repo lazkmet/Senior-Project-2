@@ -70,7 +70,7 @@
 
     protected override void OnParametersSet()
     {
-        if (returnUri is null) { returnUri = ""; }
+        if (returnUri is null || returnUri == "Logout") { returnUri = ""; }
     }
 
     async Task TryLoginAsync()

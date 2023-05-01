@@ -1,0 +1,14 @@
+﻿@page "/Logout"
+@layout AnonLayout
+@using VideoShareApp.Authentication
+@inject AuthenticationStateProvider _authStateProvider
+@inject NavigationManager _navManager
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var userAuthProvider = (UserAuthenticationProvider)_authStateProvider;
+        _navManager.NavigateTo("/Login");
+        await userAuthProvider.Logout();
+    }
+}

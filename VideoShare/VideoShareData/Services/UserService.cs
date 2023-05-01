@@ -17,6 +17,7 @@ namespace VideoShareData.Services
     {
         Task<User?> GetUserByLoginAsync(LoginModel loginValues);
         Task<int> CreateUserAsync(NewUserModel newUser);
+        Task<User?> GetUserByIdAsync(int userIdParam);
         //TODO: Delete User Async
     }
     public class UserService : IUserService
@@ -38,6 +39,12 @@ namespace VideoShareData.Services
                     return null;
                 };
             };
+            return User;
+        }
+        public async Task<User?> GetUserByIdAsync(int userIdParam)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            User? User = await context.Users.SingleOrDefaultAsync(u => u.UserId == userIdParam);
             return User;
         }
         public async Task<int> CreateUserAsync(NewUserModel newUserValues)

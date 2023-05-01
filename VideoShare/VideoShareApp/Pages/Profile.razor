@@ -1,0 +1,63 @@
+﻿@page "/Profile"
+@using VideoShareData.Helpers
+@inject AuthenticationStateProvider _authContext
+@inject IUserService _userService
+
+<PageTitle>My Profile</PageTitle>
+
+@if(loading){
+    <Loading/>
+}
+else
+{
+    if (currentUser is null)
+    {
+        <div class="alert-danger" style="align-self:center;margin-top:30px;">
+            Error: Could not find current user
+        </div>
+    }
+    else
+    {
+        <div style="display:flex; flex-direction:row; padding-top:50px;padding-left:5%;padding-right:5%">
+            <div style="width:60%;">
+                <div style="display:flex; flex-direction:row; align-items:center; margin-bottom:20px;">
+                    <ProfilePicture UserId="@currentUser.UserId" Width=150 Height=150/>
+                    <div style="width:100%;margin-left:30px;">
+                        <div style="margin-bottom:10px;font-size:36px;text-align:center;height:4rem;border:3px solid #037C00;border-radius:15px;">@currentUser.FullName</div>
+                        <div style="display:flex; flex-direction:row;">
+                            <button class="btn-primary" @onclick=ChangePFP style="max-width:30%;font-size:16px;">Change Profile Picture</button>
+                            <div style="margin-left:auto;max-width:40%; padding-left:20px; padding-right:20px; text-align:center; height: fit-content; background-color:#35DAFE;border: 2px solid #000000;border-radius: 6px;">
+                                @currentUser.UserType.ToString()</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @if(true){
+                <div class="standardGreen" style="width:2px;margin-left:30px;margin-right:30px;"/>
+                <div style="width:stretch;">
+
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    //Delete this and remove the check once User Preferences affect the website
+    private bool settingsImplemented = false;
+    private User? currentUser;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        int Id = ClaimsHelper.getUserID(await _authContext.GetAuthenticationStateAsync());
+        currentUser = await _userService.GetUserByIdAsync(Id);
+        loading = false;
+        StateHasChanged();
+    }
+
+    private void ChangePFP()
+    {
+        //NOT YET IMPLEMENTED
+    }
+}
