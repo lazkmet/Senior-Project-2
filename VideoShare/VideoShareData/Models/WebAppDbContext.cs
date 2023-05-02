@@ -300,11 +300,17 @@ public partial class WebAppDbContext : DbContext
             .GetMethod(nameof(UDF_CompletionPercentage),
             new[] { typeof(int), typeof(int) })).HasName("UDF_CompletionPercentage");
 
+        modelBuilder.HasDbFunction(typeof(WebAppDbContext)
+            .GetMethod(nameof(UDF_CourseMostRecentVisit),
+            new[] { typeof(int), typeof(int) })).HasName("UDF_CourseMostRecentVisit");
+
         OnModelCreatingPartial(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 
     public int UDF_CompletionPercentage(int UserID, int CourseID) 
+        => throw new NotImplementedException();
+    public TimeSpan UDF_CourseMostRecentVisit(int UserID, int CourseID)
         => throw new NotImplementedException();
 }

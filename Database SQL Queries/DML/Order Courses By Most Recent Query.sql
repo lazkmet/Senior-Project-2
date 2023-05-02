@@ -1,0 +1,1 @@
+SELECT * FROM Courses c INNER JOIN UserxCourse uc ON uc.CourseID = c.CourseID WHERE uc.UserID = 1 ORDER BY dbo.UDF_CourseMostRecentVisit(1, c.CourseID) DESC
