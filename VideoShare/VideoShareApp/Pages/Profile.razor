@@ -46,7 +46,7 @@ else
                 </div>
                 <div class="input-group" style="margin-bottom:20px; align-items:center">
                     <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Courses Completed:</div>
-                    <input type="text" class="form-control" placeholder="No Data" style="pointer-events:none;max-width:50px; padding-right:5px;" value=@coursesCompleted readonly />
+                    <input hidden=@(coursesCompleted < 0) type="text" class="form-control" placeholder="No Data" style="pointer-events:none;max-width:50px; padding-right:5px;" value=@coursesCompleted readonly />
                 </div>
                 <div style="display:flex; flex-direction:row;">
                     <button class="btn-primary" @onclick=StartChangePassword style="max-width:30%;font-size:18px;">Change Password</button>
@@ -123,7 +123,7 @@ else
     private User? currentUser;
     private bool loading = true;
     string? errorMessage = null;
-    private int coursesCompleted = 0;
+    private int coursesCompleted = -1;
     private PasswordChangeModel passwordChangeModel = new PasswordChangeModel();
     private EditUserModel editUserModel = new EditUserModel();
 
@@ -154,6 +154,17 @@ else
         }
         loading = false;
         StateHasChanged();
+    }
+    protected override async Task OnAfterRenderAsync(bool FirstRender)
+    {   if (coursesCompleted < 0) 
+        {
+            if  (currentUser is not null)
+            {
+                using var context = await _contextFactory.CreateDbContextAsync();
+                await Task.Run(() => coursesCompleted = context.Courses.Where(x => (context.UDF_CompletionPercentage(currentUser.UserId, x.CourseId) == 100)).Count());
+            }
+            StateHasChanged();
+        }
     }
 
     private async Task UpdateSettingsAsync()

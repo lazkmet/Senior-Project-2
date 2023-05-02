@@ -296,8 +296,15 @@ public partial class WebAppDbContext : DbContext
                 .HasConstraintName("Videos_FK_CourseID_Ref_CourseID");
         });
 
+        modelBuilder.HasDbFunction(typeof(WebAppDbContext)
+            .GetMethod(nameof(UDF_CompletionPercentage),
+            new[] { typeof(int), typeof(int) })).HasName("UDF_CompletionPercentage");
+
         OnModelCreatingPartial(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+    public int UDF_CompletionPercentage(int UserID, int CourseID) 
+        => throw new NotImplementedException();
 }

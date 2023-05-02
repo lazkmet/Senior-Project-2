@@ -48,6 +48,7 @@ public partial class User : Interfaces.FileStreamDataObj
     public virtual ICollection<UserxCourse> UserxCourses { get; set; } = new List<UserxCourse>();
 
     public virtual ICollection<UserxVideo> UserxVideos { get; set; } = new List<UserxVideo>();
+
     public string getTableName() { return "dbo.Users"; }
     public string getFilestreamColumn() { return "ProfilePicture"; }
     public string getFileGUID() { return FileGuid.ToString(); }

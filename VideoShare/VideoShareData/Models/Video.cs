@@ -31,6 +31,7 @@ public partial class Video : Interfaces.FileStreamDataObj
     public virtual Course Course { get; set; } = null!;
 
     public virtual ICollection<UserxVideo> UserxVideos { get; set; } = new List<UserxVideo>();
+
     public string getTableName() { return "dbo.Videos"; }
     public string getFilestreamColumn() { return "VideoData"; }
     public string getFileGUID() { return FileGuid.ToString(); }
