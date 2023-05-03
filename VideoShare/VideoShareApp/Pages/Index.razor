@@ -1,15 +1,69 @@
 ﻿@page "/"
 @using VideoShareData.Helpers
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
+@inject AuthenticationStateProvider _authProvider
 
 <PageTitle>Home</PageTitle>
 
-<h1>Video Share</h1>
-
 <AuthorizeView>
     <Authorized>
-        Hello, @(ClaimsHelper.getClaimValue(context, ClaimTypes.Name) ?? "").
+        @if (loading)
+        {
+            <Loading/>
+        }
+        else
+        {
+            if (currentUser is null)
+            {
+                <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                    Error: Could not find current user
+                </div>
+            }
+            else
+            {
+                <div style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;">
+                    @if (currentUser.UserxVideos.Count() > 0)
+                    {
+                        <h2 style="margin-bottom:20px;">Continue Watching</h2>
+                        <VideoTab VideoID=@(currentUser.UserxVideos.First().VideoId) style="height:150px;width:85%;" includeCourseTitle=true>
+                            @*<button class="btn-primary" href=@("/Courses/" + currentUser.UserxVideos.First().Video.CourseId)>View Course</button>*@
+                            <button Class="btn-primary">View Course</button>
+                        </VideoTab>
+                        <div class="standardGreen" style="height:2px;margin-top:30px;margin-bottom:30px;" />
+                    }
+                    @if (currentUser.UserxCourses.Count() > 0)
+                    {
+                        foreach (UserxCourse uc in currentUser.UserxCourses)
+                        {
+                            <div>@uc.CourseId</div>
+                        }
+                    }
+                </div>
+            }
+        }
     </Authorized>
     <NotAuthorized>
-        Please Log In
+        Please Log In <a href="/Login">Here</a>.
     </NotAuthorized>
 </AuthorizeView>
+
+@code{
+    private bool loading = true;
+    User? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var dbContext = await _contextFactory.CreateDbContextAsync();
+        var authContext = await _authProvider.GetAuthenticationStateAsync();
+        int ID = ClaimsHelper.getUserID(authContext);
+        //This query selects the current User, then their most recently visited incomplete video, then their top 3 most recent courses (based on video visit timestamp)
+        currentUser = dbContext.Users.Find(ID);
+        if (currentUser is not null)
+        {
+            currentUser.UserxVideos = await dbContext.UserxVideos.Where(uv => !uv.VideoCompleted && uv.UserId == ID).OrderByDescending(uv => uv.LastVisited).Include(uv => uv.Video).Take(1).ToListAsync();
+            currentUser.Courses = await dbContext.Courses.Where(course => course.UserxCourses.Any(uc => uc.UserId == ID)).OrderByDescending(course => dbContext.UDF_CourseMostRecentVisit(ID, course.CourseId)).ThenBy(course => course.CourseName).Take(3).ToListAsync();
+        }
+        loading = false;
+        StateHasChanged();
+    }
+}

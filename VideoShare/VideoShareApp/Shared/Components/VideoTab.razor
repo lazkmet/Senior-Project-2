@@ -1,0 +1,42 @@
+﻿@inject IDbContextFactory<WebAppDbContext> _contextFactory
+
+<div style=@style>
+    @if (video is null)
+    {
+        <Loading/>
+    }
+    else
+    {
+        <div style="display:flex;flex-direction:row;max-height:100px;position:relative;left:-3px;top:-3px;">
+            <img src=@("http://img.youtube.com/vi/" + "uPm3wHJdyGs" + "/hqdefault.jpg") style="height:128px;position:relative;top:-14px;aspect-ratio:4 / 3;" />
+            <div style="display:flex;flex-direction:row;margin-top:10px; margin-bottom:10px;padding-left:20px; padding-right:20px;">
+                <div style="width:60%;">
+                    Here is the text
+                </div>
+                <div>
+                    @childContent
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int VideoID { get; set; }
+    [Parameter]
+    public string style { get; set; }
+    [Parameter]
+    public bool includeCourseTitle {get; set;}
+    [Parameter]
+    public RenderFragment childContent { get; set; }
+
+    protected Video? video;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        style = style += "border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;";
+        using var context = await _contextFactory.CreateDbContextAsync();
+        video = await context.Videos.FindAsync(VideoID);
+    }
+}

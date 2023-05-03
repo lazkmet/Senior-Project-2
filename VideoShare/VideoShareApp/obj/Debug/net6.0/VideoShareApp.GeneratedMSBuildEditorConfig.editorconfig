@@ -40,20 +40,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZmlsZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/AppHeader.razor]
-build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEFwcEhlYWRlci5yYXpvcg==
+[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/Components/AppHeader.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXENvbXBvbmVudHNcQXBwSGVhZGVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/Loading.razor]
-build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXExvYWRpbmcucmF6b3I=
+[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/Components/Loading.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXENvbXBvbmVudHNcTG9hZGluZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/ProfilePicture.razor]
-build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFByb2ZpbGVQaWN0dXJlLnJhem9y
+[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/Components/ProfilePicture.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXENvbXBvbmVudHNcUHJvZmlsZVBpY3R1cmUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/RedirectToLogin.razor]
-build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFJlZGlyZWN0VG9Mb2dpbi5yYXpvcg==
+[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/Components/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXENvbXBvbmVudHNcUmVkaXJlY3RUb0xvZ2luLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/Components/VideoTab.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXENvbXBvbmVudHNcVmlkZW9UYWIucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/_Imports.razor]
@@ -68,13 +72,13 @@ build_metadata.AdditionalFiles.CssScope = b-bs2bjtyckf
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEFub25MYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-nmgjccvaqk
 
+[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/Components/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXENvbXBvbmVudHNcTmF2TWVudS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-i4n7209puv
+
 [C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-8q7d9ee547
-
-[C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Shared/NavMenu.razor]
-build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = b-lrtxmt9tai
 
 [C:/Users/lkmet/Desktop/Spring 2023/Senior Project/GitHub Deliverables/Project-Quriosity/VideoShare/VideoShareApp/Pages/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
