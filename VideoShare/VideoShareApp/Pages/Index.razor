@@ -38,15 +38,15 @@
                             <div style="flex-grow:1;"/>
                             @foreach (Course c in currentUser.Courses)
                             {
-                                <CourseCard course=@c style="width:325px;height:400px;flex-shrink:0;" />
+                                <CourseCard course=@c userID=@currentUser.UserId style="width:325px;height:400px;flex-shrink:0;" />
                                 <div style="flex-grow:1;" />
                             }
                         </div>
-                        <a @onclick=NavigateToAllCourses style="margin-top:30px;margin-bottom:20px;">See all courses ></a>
+                        <div class="customlink" @onclick=NavigateToAllCourses style="margin-top:30px;margin-bottom:20px;">See all courses ></div>
                     }
                     else
                     {
-                        <span style="text-align:center">Looks like you don't have any courses. <a @onclick=NavigateToAllCourses>Join some here!</a></span>
+                        <span style="text-align:center">Looks like you don't have any courses. <span class="customlink" @onclick=NavigateToAllCourses>Join some here!</span></span>
                     }
                 </div>
             }
@@ -63,9 +63,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var dbContext = await _contextFactory.CreateDbContextAsync();
         var authContext = await _authProvider.GetAuthenticationStateAsync();
         int ID = ClaimsHelper.getUserID(authContext);
+        using var dbContext = await _contextFactory.CreateDbContextAsync();
         //This query selects the current User, then their most recently visited incomplete video, then their top 3 most recent courses (based on video visit timestamp)
         currentUser = dbContext.Users.Find(ID);
         if (currentUser is not null)
@@ -81,7 +81,7 @@
     {
         if (currentUser is not null && currentUser.UserxVideos.Count() > 0)
         {
-            _navManager.NavigateTo(_navManager.BaseUri + "Videos/" + currentUser.UserxVideos.First().VideoId);
+            _navManager.NavigateTo(_navManager.BaseUri + "Video/" + currentUser.UserxVideos.First().VideoId);
         }    
     }
     protected void NavigateToAllCourses()

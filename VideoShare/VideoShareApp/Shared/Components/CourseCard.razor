@@ -44,9 +44,14 @@
 
 @code {
     [Parameter]
-    public Course course { get; set; }
+    public Course? course { get; set; }
+    [Parameter]
+    public int? courseID { get; set; }
+    [Parameter]
+    public int userID { get; set; }
     [Parameter]
     public string? style { get; set; }
+
     private bool loading = true;
     private int completionPercentage = 0;
     private string coursePhotoUrl = "default_course.png";
@@ -54,10 +59,14 @@
     protected override async Task OnParametersSetAsync()
     {
         style = (style ?? "") + "min-height:250px;min-width:200px;--bs-card-border-width:3px;--bs-card-border-color:rgba(0, 0, 0, 0.5)";
+        if (course is null)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            course = await context.Courses.FindAsync(courseID);
+        }
+
         if (course is not null)
         {
-            var authState = await _authProvider.GetAuthenticationStateAsync();
-            int userID = ClaimsHelper.getUserID(authState);
             completionPercentage = await _courseService.GetCompletionPercentageAsync(userID, course.CourseId);
             //Do stuff to grab course photo here - using default for now
         }
@@ -101,11 +110,11 @@
         {
             //You are here if every video in the course has a UserxVideo with completed == true.
             //This should not be possible because the button is only available when completion percentage is < 100
-            _navManager.NavigateTo(_navManager.BaseUri + "Courses/" + course.CourseId);
+            _navManager.NavigateTo(_navManager.BaseUri + "Course/" + course.CourseId);
         }
         else
         {
-            _navManager.NavigateTo(_navManager.BaseUri + "Videos/" + nextID);
+            _navManager.NavigateTo(_navManager.BaseUri + "Video/" + nextID);
         }
     }
 }

@@ -22,4 +22,9 @@
     <ProjectReference Include="..\VideoShareData\VideoShareData.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Attachment\" />
+    <Folder Include="wwwroot\Image\" />
+  </ItemGroup>
+
 </Project>

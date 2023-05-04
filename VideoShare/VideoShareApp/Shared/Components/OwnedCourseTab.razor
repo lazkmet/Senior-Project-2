@@ -1,0 +1,64 @@
+﻿@inject NavigationManager _navManager
+
+<div style=@style>
+    @if (loading)
+    {
+        <Loading/>
+    }
+    else if (course is null)
+    {
+        <span class="card-title alert-danger">Error: Course Not Found</span>
+    }
+    else
+    {
+        <div @onclick=NavigateToCourse style="display:flex;flex-direction:row;max-height:105%;position:relative;left:-3px;top:-3px;cursor:pointer;">
+            <img src=@coursePhotoUrl style=@((String.IsNullOrWhiteSpace(styleProps?.Height)) ? ";" : "height:" + styleProps.Height ?? "" + ";") />
+            <div style="display:flex;flex-direction:row;margin-top:5px; margin-bottom:5px;padding-left:20px; padding-right:20px;flex-grow:1;">
+                <div style="width:60%; padding-right:20px;display:flex;flex-direction:column;">
+                    <h5 style="height:min-content">@course.CourseName</h5>
+                    <div style="flex-grow:1;"/>
+                    <span class="text-description" style="height:min-content;font-size:12px;">@course.CourseDescription</span>
+                </div>
+                <div style="flex-grow:1;display:flex;flex-direction:row-reverse;align-items:center;">
+                    <button @onclick=NavigateToEdit @onclick:stopPropagation="true" class="btn-primary" style="margin-left:20px;height:min-content;">Edit Course</button>
+                    <button @onclick=NavigateToStudents @onclick:stopPropagation="true" class="btn-primary" style="margin-left:20px;height:min-content;">Manage Students</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Course course { get; set; }
+    [Parameter]
+    public int userID { get; set; }
+    [Parameter]
+    public StyleProperties? styleProps { get; set; }
+
+    private string style;
+    private bool loading = true;
+    private string coursePhotoUrl = "default_course.png";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        style = styleProps?.GetStyle() + "border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;overflow:hidden;position:relative;";
+        if (course is not null)
+        {
+            //Do stuff to grab course photo here - using default for now
+        }
+        loading = false;
+    }
+    private void NavigateToCourse()
+    {
+        _navManager.NavigateTo(_navManager.BaseUri + "Course/" + course.CourseId);
+    }
+    private void NavigateToEdit()
+    {
+        _navManager.NavigateTo(_navManager.BaseUri + "Course/Edit/" + course.CourseId);
+    }
+    private void NavigateToStudents()
+    {
+        _navManager.NavigateTo(_navManager.BaseUri + "Course/Students/" + course.CourseId);    
+    }
+}

@@ -1,5 +1,11 @@
 ﻿@page "/MyCourses"
 @page "/MyCourses/Join/{courseCode}"
+@using VideoShareData.Helpers
+@using VideoShareData.DTOs
+@using System.ComponentModel.DataAnnotations;
+@implements IDisposable
+@inject AuthenticationStateProvider _authProvider
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
 
 <PageTitle>My Courses</PageTitle>
 
@@ -9,9 +15,43 @@
         {
             <Loading/>
         }
+        else if (currentUser is null)
+        {
+        <div class="alert-danger" style="align-self:center;margin-top:30px;">
+            Error: Could not find current user
+            </div>
+        }
         else
         {
-            @*For Course Code Text Input: https://www.syncfusion.com/forums/153276/automaticaly-converts-input-text-to-uppercase-using-sftextbox-component*@
+            <div style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;align-items:center;">
+                @*For Course Code Text Input: https://www.syncfusion.com/forums/153276/automaticaly-converts-input-text-to-uppercase-using-sftextbox-component*@
+                <h2>Owned Courses</h2>
+                @foreach (Course c in currentUser.Courses)
+                {
+                    <OwnedCourseTab course=@c styleProps=@(new StyleProperties() {Height="80px", MaxWidth="90%"}) />
+                }
+
+                <div class="standardGreen" style="height:2px;margin-top:30px;margin-bottom:30px;" />
+
+                <div style="display:flex;flex-direction:row;width:100%;">
+                    <div style="width:40%;"/>
+                    <h2 style="flex-shrink:0;">Joined Courses</h2>
+                    <EditForm Model="@courseCodeModel" OnValidSubmit=TryAddCourseAsync Context="editContext" style="width:40%;">
+                        <DataAnnotationsValidator/>
+                        <div style="display:flex;flex-direction:row;align-items:center;">
+                            <InputText @oninput="ClearError" @bind-Value="@courseCodeModel.enteredCode" placeholder="Enter Course Code" style="margin-left:20px;width:200px;"></InputText>
+                            <button class="btn-primary" type="submit" style="flex-shrink:0;height:min-content;margin-left:10px;">Add</button>
+                        </div>
+                        <ValidationMessage For="() => courseCodeModel.enteredCode" style="width:fit-content;" />                       
+                    </EditForm>
+                </div>
+                @if (String.IsNullOrEmpty(errorMessage) == false)
+                {
+                    <div class="alert alert-danger">@errorMessage</div>
+                }
+
+
+            </div>
         }
     </Authorized>
     <NotAuthorized>
@@ -23,5 +63,41 @@
     [Parameter]
     public string courseCode { get; set; }
 
+    protected User? currentUser;
+    protected CourseCodeModel courseCodeModel = new CourseCodeModel();
     private bool loading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        int ID = ClaimsHelper.getUserID(authState);
+        using var dbContext = await _contextFactory.CreateDbContextAsync();
+        //This query selects the current User along with their owned courses and the userXcourse objects for their joined courses
+        currentUser = await dbContext.Users.Where(u => u.UserId == ID)
+            .Include(u => u.Courses) //Owned courses
+            .Include(u => u.UserxCourses) //Joined courses
+            .AsSplitQuery().FirstOrDefaultAsync();
+        loading = false;
+        StateHasChanged();
+    }
+
+    private void ClearError()
+    {
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    private async Task TryAddCourseAsync()
+    {
+        errorMessage = "Add Course: " + courseCodeModel.enteredCode ?? "[none]";
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        //Clear the entered code in case navigating away from the page "submits" the form
+        //(Happened prior when working with offcanvases)
+        courseCodeModel.enteredCode = null;
+    }
 }

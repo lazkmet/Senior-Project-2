@@ -17,11 +17,14 @@ h5 {
     margin-bottom: 0.1rem !important;
 }
 
-a {
-    color: #08890C !important;
-    text-decoration: underline !important;
-    cursor: pointer !important;
+.customlink {
+    color: #08890C;
+    text-decoration: underline;
+    cursor: pointer;
 }
+    .customlink:hover {
+        color: #14F72A;
+    }
 
 .btn-primary {
     color: #fff;

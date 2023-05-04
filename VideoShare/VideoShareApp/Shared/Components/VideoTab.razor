@@ -8,7 +8,7 @@
     else
     {
         <div @onclick=onClick style="display:flex;flex-direction:row;max-height:100px;position:relative;left:-3px;top:-3px;cursor:pointer;">
-            <img src=@("http://img.youtube.com/vi/" + "uPm3wHJdyGs" + "/hqdefault.jpg") style="height:128px;position:relative;top:-14px;aspect-ratio:4 / 3;" />
+            <img src=@("http://img.youtube.com/vi/" + video.YtvideoId + "/hqdefault.jpg") style="height:128px;position:relative;top:-14px;aspect-ratio:4 / 3;" />
             <div style="display:flex;flex-direction:row;margin-top:10px; margin-bottom:10px;padding-left:20px; padding-right:20px;flex-grow:1;">
                 <div style="width:70%; padding-right:20px;display:flex;flex-direction:column;">
                     <h5 style="height:min-content">@video.VideoTitle</h5>
@@ -44,7 +44,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        style = style += "border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;overflow:hidden;";
+        style = (style ?? "") + "border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;overflow:hidden;";
         using var context = await _contextFactory.CreateDbContextAsync();
         if (includeCourseTitle)
         {
