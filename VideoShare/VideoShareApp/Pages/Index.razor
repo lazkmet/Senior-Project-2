@@ -2,6 +2,7 @@
 @using VideoShareData.Helpers
 @inject IDbContextFactory<WebAppDbContext> _contextFactory
 @inject AuthenticationStateProvider _authProvider
+@inject NavigationManager _navManager
 
 <PageTitle>Home</PageTitle>
 
@@ -24,32 +25,41 @@
                 <div style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;">
                     @if (currentUser.UserxVideos.Count() > 0)
                     {
-                        <h2 style="margin-bottom:20px;">Continue Watching</h2>
-                        <VideoTab VideoID=@(currentUser.UserxVideos.First().VideoId) style="height:150px;width:85%;" includeCourseTitle=true>
-                            @*<button class="btn-primary" href=@("/Courses/" + currentUser.UserxVideos.First().Video.CourseId)>View Course</button>*@
-                            <button Class="btn-primary">View Course</button>
+                        <h2>Continue Watching</h2>
+                        <VideoTab VideoID=@(currentUser.UserxVideos.First().VideoId) style="height:100px;width:85%;" includeCourseTitle=true onClick=@NavigateToVideo>
+                            <button class="btn-primary" style="margin-left:auto;margin-right:10px;height:40px;min-width:115px;" @onclick=@(x => _navManager.NavigateTo("/Courses/" + currentUser.UserxVideos.First().Video.CourseId)) @onclick:stopPropagation="true">View Course</button>
                         </VideoTab>
                         <div class="standardGreen" style="height:2px;margin-top:30px;margin-bottom:30px;" />
                     }
-                    @if (currentUser.UserxCourses.Count() > 0)
+                    @if (currentUser.Courses.Count() > 0)
                     {
-                        foreach (UserxCourse uc in currentUser.UserxCourses)
-                        {
-                            <div>@uc.CourseId</div>
-                        }
+                        <h2>Recent Courses</h2>
+                        <div style="display:flex;flex-direction:row;flex-wrap:wrap;">
+                            <div style="flex-grow:1;"/>
+                            @foreach (Course c in currentUser.Courses)
+                            {
+                                <CourseCard course=@c style="width:325px;height:400px;flex-shrink:0;" />
+                                <div style="flex-grow:1;" />
+                            }
+                        </div>
+                        <a @onclick=NavigateToAllCourses style="margin-top:30px;margin-bottom:20px;">See all courses ></a>
+                    }
+                    else
+                    {
+                        <span style="text-align:center">Looks like you don't have any courses. <a @onclick=NavigateToAllCourses>Join some here!</a></span>
                     }
                 </div>
             }
         }
     </Authorized>
     <NotAuthorized>
-        Please Log In <a href="/Login">Here</a>.
+        Please Log In <a href="/Login">Here.</a>.
     </NotAuthorized>
 </AuthorizeView>
 
 @code{
     private bool loading = true;
-    User? currentUser;
+    private User? currentUser;
 
     protected override async Task OnInitializedAsync()
     {
@@ -65,5 +75,17 @@
         }
         loading = false;
         StateHasChanged();
+    }
+
+    protected void NavigateToVideo()
+    {
+        if (currentUser is not null && currentUser.UserxVideos.Count() > 0)
+        {
+            _navManager.NavigateTo(_navManager.BaseUri + "Videos/" + currentUser.UserxVideos.First().VideoId);
+        }    
+    }
+    protected void NavigateToAllCourses()
+    {
+        _navManager.NavigateTo(_navManager.BaseUri + "MyCourses");       
     }
 }

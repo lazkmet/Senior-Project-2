@@ -7,13 +7,20 @@
     }
     else
     {
-        <div style="display:flex;flex-direction:row;max-height:100px;position:relative;left:-3px;top:-3px;">
+        <div @onclick=onClick style="display:flex;flex-direction:row;max-height:100px;position:relative;left:-3px;top:-3px;cursor:pointer;">
             <img src=@("http://img.youtube.com/vi/" + "uPm3wHJdyGs" + "/hqdefault.jpg") style="height:128px;position:relative;top:-14px;aspect-ratio:4 / 3;" />
-            <div style="display:flex;flex-direction:row;margin-top:10px; margin-bottom:10px;padding-left:20px; padding-right:20px;">
-                <div style="width:60%;">
-                    Here is the text
+            <div style="display:flex;flex-direction:row;margin-top:10px; margin-bottom:10px;padding-left:20px; padding-right:20px;flex-grow:1;">
+                <div style="width:70%; padding-right:20px;display:flex;flex-direction:column;">
+                    <h5 style="height:min-content">@video.VideoTitle</h5>
+                    @if (includeCourseTitle && video.Course is not null) {
+                        <span style="height:auto;font-size:14px;font-style:italic;">@video.Course.CourseName</span>
+                        <span class="text-description" style="height:min-content;font-size:12px;">@video.VideoDescription</span>
+                    }
+                    else {
+                        <span class="text-description" style="height:auto;font-size:12px;">@video.VideoDescription</span>
+                    }
                 </div>
-                <div>
+                <div style="flex-grow:1;display:flex;">
                     @childContent
                 </div>
             </div>
@@ -29,14 +36,24 @@
     [Parameter]
     public bool includeCourseTitle {get; set;}
     [Parameter]
+    public EventCallback onClick { get; set; }
+    [Parameter]
     public RenderFragment childContent { get; set; }
 
     protected Video? video;
 
     protected override async Task OnParametersSetAsync()
     {
-        style = style += "border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;";
+        style = style += "border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;overflow:hidden;";
         using var context = await _contextFactory.CreateDbContextAsync();
-        video = await context.Videos.FindAsync(VideoID);
+        if (includeCourseTitle)
+        {
+            video = await context.Videos.Where(video => video.VideoId == VideoID).Include(video => video.Course).FirstOrDefaultAsync();
+        }
+        else
+        {
+            video = await context.Videos.FindAsync(VideoID);
+        }
+        StateHasChanged();
     }
 }

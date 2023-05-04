@@ -27,9 +27,10 @@ builder.Services.AddDbContextFactory<WebAppDbContext>(options => {
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, UserAuthenticationProvider>();
 builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<ICourseService, CourseService>();
+
 //Set up needed components for Authentication
 SetupAuthentication(builder.Services);
-
 
 //Register Syncfusion
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(builder.Configuration.GetValue<string>("Syncfusion"));

@@ -1,0 +1,111 @@
+﻿@using VideoShareData.Helpers
+@using Microsoft.Data.SqlClient
+@inject NavigationManager _navManager
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
+@inject AuthenticationStateProvider _authProvider
+@inject ICourseService _courseService
+
+<div class="card" style=@style>
+    @if (loading)
+    {
+        <Loading/>
+    }
+    else if (course is null)
+    {
+        <img class="card-img-top" src="default_course.png"/>
+        <div class="card-body" style="position:relative;">
+            <span class="card-title alert-danger">Error: Course Not Found</span>
+        </div>
+    }
+    else
+    {
+        <img class="card-img-top" src="default_course.png" />
+        <div class="card-body" style="position:relative;display:flex;flex-direction:column;">
+            <div style="display:flex;flex-direction:row;position:relative;">
+                <div style="flex-grow:1;max-width:70%;display:flex;flex-direction:column;">
+                    <h5 class="card-title">@course.CourseName</h5>
+                    <div style="flex-grow:1;"/>
+                    <p class="card-text">@(completionPercentage)% Complete</p>
+                </div>
+                <div style="width:30%;aspect-ratio:1 / 1;background-color:green;margin-bottom:auto;"></div>
+            </div>
+            <div style="flex-grow:1;"/>
+            <div style="display:flex;flex-direction:row;justify-content:center;">
+                @if (completionPercentage < 100)
+                {
+                    <button class="btn-primary" @onclick=ContinueCourseAsync>@(completionPercentage == 0 ? "Get Started" : "Continue")</button>
+                    <div style="flex-grow:1;"/>
+                }
+                <button class="btn-primary" @onclick=NavigateToCourse>View Course</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Course course { get; set; }
+    [Parameter]
+    public string? style { get; set; }
+    private bool loading = true;
+    private int completionPercentage = 0;
+    private string coursePhotoUrl = "default_course.png";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        style = (style ?? "") + "min-height:250px;min-width:200px;--bs-card-border-width:3px;--bs-card-border-color:rgba(0, 0, 0, 0.5)";
+        if (course is not null)
+        {
+            var authState = await _authProvider.GetAuthenticationStateAsync();
+            int userID = ClaimsHelper.getUserID(authState);
+            completionPercentage = await _courseService.GetCompletionPercentageAsync(userID, course.CourseId);
+            //Do stuff to grab course photo here - using default for now
+        }
+        loading = false;
+        StateHasChanged();
+    }
+
+    private void NavigateToCourse()
+    {
+        _navManager.NavigateTo(_navManager.BaseUri + "Courses/" + course.CourseId);
+    }
+
+    private async Task ContinueCourseAsync()
+    {
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        int userID = ClaimsHelper.getUserID(authState);
+        using var context = await _contextFactory.CreateDbContextAsync();
+        course.Videos = await _courseService.GetVideosQueryableOrdered(context, course.CourseId).Include(v => v.UserxVideos.Where(uv => uv.UserId == userID).Take(1)).ToListAsync();
+        int nextID = -1;
+        foreach (Video v in course.Videos)
+        {
+            if (v.UserxVideos.Count > 0)
+            {
+                if (!v.UserxVideos.First().VideoCompleted)
+                {
+                    //You are here if the video has been visited at least once by the user and a UserxVideo has been generated,
+                    //but the video was not completed by the user.
+                    nextID = v.VideoId;
+                    break;
+                }
+            }
+            else
+            {
+                //You are here if no UserxVideo exists for the current course Video.
+                //This means the video has not yet been viewed by the current user.
+                nextID = v.VideoId;
+                break;
+            }
+        }
+        if (nextID == -1)
+        {
+            //You are here if every video in the course has a UserxVideo with completed == true.
+            //This should not be possible because the button is only available when completion percentage is < 100
+            _navManager.NavigateTo(_navManager.BaseUri + "Courses/" + course.CourseId);
+        }
+        else
+        {
+            _navManager.NavigateTo(_navManager.BaseUri + "Videos/" + nextID);
+        }
+    }
+}

@@ -9,13 +9,18 @@ h1:focus {
 }
 
 h2 {
-    font-size:20px;
     text-decoration:underline;
-    padding-bottom:20px;
+    margin-bottom:20px !important;
 }
 
-a, .btn-link {
-    color: #08890C;
+h5 {
+    margin-bottom: 0.1rem !important;
+}
+
+a {
+    color: #08890C !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
 }
 
 .btn-primary {
@@ -44,6 +49,7 @@ a, .btn-link {
         outline-color: darkgreen !important;
         box-shadow: 0 0 0 0.2rem rgba(00, 84, 13, 0.6) !important;
     }
+
 .btn-secondary {
     color: #fff;
     background-color: #F14F1C;
@@ -71,14 +77,21 @@ a, .btn-link {
         box-shadow: 0 0 0 0.2rem rgba(195, 47, 0, 0.55) !important;
     }
 
+.text-description {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* number of lines to show */
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
 
-    .vertical-center {
-        margin: 0;
-        position: absolute;
-        top: 50%;
-        -ms-transform: translateY(-50%);
-        transform: translateY(-50%);
-    }
+.vertical-center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
 
 .standardGreen {
     background-color: #06C202;
