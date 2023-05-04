@@ -43,6 +43,7 @@ public partial class User : Interfaces.FileStreamDataObj
 
     public DateTime? LatestLogin { get; set; }
 
+    //Note: This can be used to hold "Courses Owned" or "Courses Joined" depending on the page.
     public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
 
     public virtual ICollection<UserxCourse> UserxCourses { get; set; } = new List<UserxCourse>();

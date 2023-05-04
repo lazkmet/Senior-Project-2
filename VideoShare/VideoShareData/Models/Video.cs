@@ -20,7 +20,7 @@ public partial class Video : Interfaces.FileStreamDataObj
 
     public VideoType VideoType { get; set; }
 
-    public string? YtvideoUrl { get; set; }
+    public string? YtvideoId { get; set; }
 
     public bool YtuseDescription { get; set; }
 

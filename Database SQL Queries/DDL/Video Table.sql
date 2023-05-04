@@ -15,12 +15,10 @@ CREATE TABLE Videos(
 	VideoType tinyint NOT NULL
 		CONSTRAINT Videos_Default_VideoType DEFAULT(0),
 		CONSTRAINT Videos_CheckValid_VideoType CHECK(VideoType IN (0, 1)),
-	YTVideoURL varchar(255),
+	YTVideoID char(11),
 	YTUseDescription bit NOT NULL
 		CONSTRAINT Videos_Default_YTUseDescription DEFAULT(0),
-	VideoData varbinary(max) FILESTREAM NULL,
-	CONSTRAINT Videos_NotNull_YTVideoURL CHECK(VideoType != 0 OR YTVideoURL IS NOT NULL),
-	CONSTRAINT Videos_NotNull_VideoData CHECK(VideoType != 1 OR VideoData IS NOT NULL)
+	VideoData varbinary(max) FILESTREAM NULL
 ) FILESTREAM_ON Videos;
 GO
 

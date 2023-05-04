@@ -1,0 +1,27 @@
+﻿@page "/MyCourses"
+@page "/MyCourses/Join/{courseCode}"
+
+<PageTitle>My Courses</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @if (loading)
+        {
+            <Loading/>
+        }
+        else
+        {
+            @*For Course Code Text Input: https://www.syncfusion.com/forums/153276/automaticaly-converts-input-text-to-uppercase-using-sftextbox-component*@
+        }
+    </Authorized>
+    <NotAuthorized>
+        Please Log In <a href="/Login">Here.</a>.
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public string courseCode { get; set; }
+
+    private bool loading = true;
+}

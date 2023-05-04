@@ -285,10 +285,11 @@ public partial class WebAppDbContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.VideoType).HasConversion<byte>();
             entity.Property(e => e.YtuseDescription).HasColumnName("YTUseDescription");
-            entity.Property(e => e.YtvideoUrl)
-                .HasMaxLength(255)
+            entity.Property(e => e.YtvideoId)
+                .HasMaxLength(11)
                 .IsUnicode(false)
-                .HasColumnName("YTVideoURL");
+                .IsFixedLength()
+                .HasColumnName("YTVideoID");
 
             entity.HasOne(d => d.Course).WithMany(p => p.Videos)
                 .HasForeignKey(d => d.CourseId)
