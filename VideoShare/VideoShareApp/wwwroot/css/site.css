@@ -13,6 +13,11 @@ h2 {
     margin-bottom:20px !important;
 }
 
+h3 {
+    font-weight:400 !important;
+    margin-bottom: 0px !important; 
+}
+
 h5 {
     margin-bottom: 0.1rem !important;
 }

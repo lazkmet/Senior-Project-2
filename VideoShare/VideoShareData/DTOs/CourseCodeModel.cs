@@ -9,10 +9,9 @@ namespace VideoShareData.DTOs
 {
     public class CourseCodeModel
     {
-        [Required]
-        [RegularExpression(@"^[A-Z0-9]*$", ErrorMessage = "Invalid Characters Present")]
-        [MaxLength(6)]
-        [MinLength(6)]
+        [RegularExpression(@"^[A-Za-z0-9]*$", ErrorMessage = "Course Code can only contain alphanumeric characters")]
+        [MaxLength(6, ErrorMessage = "Course Code must be 6 characters long")]
+        [MinLength(6, ErrorMessage = "Course Code must be 6 characters long")]
         public string enteredCode { get; set; }
     }
 }

@@ -14,10 +14,11 @@ namespace VideoShareData.Services
 {
     public interface ICourseService {
         Task<Course?> GetCourseByIdAsync(int courseID);
-        Task<int> CreateCourseAsync(int ownerID);
+        Task<ServiceTaskResults<Course?>> CreateCourseAsync(int ownerID);
         Task<Course> UpdateCourseAsync(Course courseToUpdate, List<string> propertiesUpdated);
         Task<int> GetCompletionPercentageAsync(int userID, int courseID);
         IQueryable<Video> GetVideosQueryableOrdered(WebAppDbContext context, int courseID);
+        Task<ServiceTaskResults<UserxCourse?>> AddUserToCourseAsync(int userID, string courseCode);
         //TODO: Delete Course Async
     }
     public class CourseService : ICourseService
@@ -34,14 +35,14 @@ namespace VideoShareData.Services
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Courses.FindAsync(courseID);
         }
-        public async Task<int> CreateCourseAsync(int ownerID)
+        public async Task<ServiceTaskResults<Course?>> CreateCourseAsync(int ownerID)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             string courseCode = await GenerateCourseCodeAsync();
             var newCourse = new Course {CourseCode = courseCode, OwnerId = ownerID, CourseName = "New Course"};
             context.Add(newCourse);
             await context.SaveChangesAsync();
-            return newCourse.CourseId;
+            return new ServiceTaskResults<Course?>() {TaskSuccessful = true, ReturnValue = newCourse};
         }
 
         public async Task<int> GetCompletionPercentageAsync(int userID, int courseID)
@@ -99,6 +100,48 @@ namespace VideoShareData.Services
                 return newCode;
             });
             return returnValue;
-        } 
+        }
+
+        public async Task<ServiceTaskResults<UserxCourse?>> AddUserToCourseAsync(int userID, string courseCode) { 
+            using var context = await _contextFactory.CreateDbContextAsync();
+            UserxCourse? newRelation = null;
+            if (!(await context.Users.AnyAsync(u => u.UserId == userID))) {
+                //You are here if the user ID does not exist
+                return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "The User to add does not exist"};
+            }
+            var course = await context.Courses.Where(c => c.CourseCode == courseCode).AsNoTracking().FirstOrDefaultAsync();
+            if (course is not null)
+            {
+                if (course.OwnerId == userID)
+                {
+                    //You are here if the user you are attempting to add is the owner of the course
+                    //you are trying to add them to.
+                    return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "A course owner cannot join their own course" };
+                }
+                if (await context.UserxCourses.AnyAsync(uc => uc.UserId == userID && uc.CourseId == course.CourseId))
+                {
+                    //You are here if there is already a relation for this User and Course combination
+                    return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "The User to add is already a member of that course" }; ;
+                }
+                /*Now that you have verified that:
+                    -The userID is valid
+                    -The course code is valid
+                    -The user is not the owner of the course
+                    -The user is not already a member of the course,
+                you can finally add the relation to the database*/
+                newRelation = new UserxCourse()
+                {
+                    UserId = userID,
+                    CourseId = course.CourseId
+                };
+                await context.AddAsync(newRelation);
+                await context.SaveChangesAsync();
+                return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = true, ReturnValue = newRelation };
+            }
+            else {
+                //You are here if the course code does not match an existing course
+                return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "Invalid course code" };
+            }
+        }
     }
 }

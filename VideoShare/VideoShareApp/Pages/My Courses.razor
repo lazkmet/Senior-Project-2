@@ -6,6 +6,8 @@
 @implements IDisposable
 @inject AuthenticationStateProvider _authProvider
 @inject IDbContextFactory<WebAppDbContext> _contextFactory
+@inject ICourseService _courseService
+@inject NavigationManager _navManager
 
 <PageTitle>My Courses</PageTitle>
 
@@ -24,22 +26,25 @@
         else
         {
             <div style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;align-items:center;">
-                @*For Course Code Text Input: https://www.syncfusion.com/forums/153276/automaticaly-converts-input-text-to-uppercase-using-sftextbox-component*@
+                
                 <h2>Owned Courses</h2>
                 @foreach (Course c in currentUser.Courses)
                 {
-                    <OwnedCourseTab course=@c styleProps=@(new StyleProperties() {Height="80px", MaxWidth="90%"}) />
+                    <OwnedCourseTab course=@c styleProps=@(new StyleProperties() {Height="80px", Width="90%"}) />
                 }
+                <div @onclick=CreateCourseAsync style="height:80px;width:90%;border: 3px solid rgba(0, 0, 0, 0.5);border-radius:6px;overflow:hidden;display:flex;flex-direction:row;padding-top:10px; padding-bottom:10px;padding-left:20px; padding-right:20px;align-items:center;cursor:pointer;">
+                    <span class="oi oi-plus" style="color:#037C00;font-size:30px;"></span> <h3 style="margin-left:20px;">Create New Course</h3>   
+                </div>
 
                 <div class="standardGreen" style="height:2px;margin-top:30px;margin-bottom:30px;" />
 
                 <div style="display:flex;flex-direction:row;width:100%;">
                     <div style="width:40%;"/>
                     <h2 style="flex-shrink:0;">Joined Courses</h2>
-                    <EditForm Model="@courseCodeModel" OnValidSubmit=TryAddCourseAsync Context="editContext" style="width:40%;">
+                    <EditForm Model="@courseCodeModel" OnValidSubmit=TryAddCourseAsync Context="editContext" style="width:40%;padding-left:40px;">
                         <DataAnnotationsValidator/>
                         <div style="display:flex;flex-direction:row;align-items:center;">
-                            <InputText @oninput="ClearError" @bind-Value="@courseCodeModel.enteredCode" placeholder="Enter Course Code" style="margin-left:20px;width:200px;"></InputText>
+                            <InputText @oninput="ClearError" @bind-Value="@courseCodeModel.enteredCode" placeholder="Enter Course Code" style="width:200px;text-transform:uppercase;"></InputText>
                             <button class="btn-primary" type="submit" style="flex-shrink:0;height:min-content;margin-left:10px;">Add</button>
                         </div>
                         <ValidationMessage For="() => courseCodeModel.enteredCode" style="width:fit-content;" />                       
@@ -88,9 +93,42 @@
         StateHasChanged();
     }
 
+    private async Task CreateCourseAsync()
+    {
+        if  (currentUser is null)
+        {
+            return;   
+        }
+        var results = await _courseService.CreateCourseAsync(currentUser.UserId);
+        if (results.TaskSuccessful)
+        {
+            //If task was successful, returnValue should not be null.
+            currentUser.Courses.Add(results.ReturnValue);
+        }
+        else
+        {
+            errorMessage = "Error: " + results.TaskMessage + ".";
+        }
+        StateHasChanged();
+    }
+
     private async Task TryAddCourseAsync()
     {
-        errorMessage = "Add Course: " + courseCodeModel.enteredCode ?? "[none]";
+        if (currentUser is null)
+        {
+            return;
+        }
+        //Even though it displays as all caps, the input is still captured as lowercase characters
+        var code = (courseCodeModel.enteredCode ?? "").ToUpper();
+        var results = await _courseService.AddUserToCourseAsync(currentUser.UserId, code);
+        if (results.TaskSuccessful)
+        {
+            //If task was successful, returnValue is not null
+            _navManager.NavigateTo(_navManager.BaseUri + "/Courses/" + results.ReturnValue.CourseId);
+        }
+        else {
+            errorMessage = "Error: " + results.TaskMessage + ".";
+        }
         StateHasChanged();
     }
 
