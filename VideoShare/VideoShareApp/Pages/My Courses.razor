@@ -2,7 +2,8 @@
 @page "/MyCourses/Join/{courseCode}"
 @using VideoShareData.Helpers
 @using VideoShareData.DTOs
-@using System.ComponentModel.DataAnnotations;
+@using VideoShareData.Enums
+@using System.ComponentModel.DataAnnotations
 @implements IDisposable
 @inject AuthenticationStateProvider _authProvider
 @inject IDbContextFactory<WebAppDbContext> _contextFactory
@@ -36,10 +37,12 @@
                     <span class="oi oi-plus" style="color:#037C00;font-size:30px;"></span> <h3 style="margin-left:20px;">Create New Course</h3>   
                 </div>
 
-                <div class="standardGreen" style="height:2px;margin-top:30px;margin-bottom:30px;" />
+                <div class="standardGreen" style="height:2px;width:100%;margin-top:30px;margin-bottom:30px;" />
 
                 <div style="display:flex;flex-direction:row;width:100%;">
-                    <div style="width:40%;"/>
+                    <div style="width:40%;display:flex;flex-direction:row;align-items:center;">
+                        @*There would be something here if my imported libraries worked as expected*@
+                    </div>
                     <h2 style="flex-shrink:0;">Joined Courses</h2>
                     <EditForm Model="@courseCodeModel" OnValidSubmit=TryAddCourseAsync Context="editContext" style="width:40%;padding-left:40px;">
                         <DataAnnotationsValidator/>
@@ -55,6 +58,14 @@
                     <div class="alert alert-danger">@errorMessage</div>
                 }
 
+                <div>
+                    @foreach (UserxCourse c in currentUser.UserxCourses)
+                    {
+                        <div style="padding:20px;display:inline-block;vertical-align:top;">
+                            <CourseCard courseID="@c.CourseId" userID=@currentUser.UserId style="width:325px;height:400px;flex-shrink:0;"></CourseCard>
+                        </div>
+                    }
+                </div>
 
             </div>
         }
@@ -83,6 +94,7 @@
             .Include(u => u.Courses) //Owned courses
             .Include(u => u.UserxCourses) //Joined courses
             .AsSplitQuery().FirstOrDefaultAsync();
+
         loading = false;
         StateHasChanged();
     }

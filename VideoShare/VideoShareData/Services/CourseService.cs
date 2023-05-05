@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using VideoShareData.Models;
+using VideoShareData.Enums;
 
 namespace VideoShareData.Services
 {
@@ -19,6 +20,7 @@ namespace VideoShareData.Services
         Task<int> GetCompletionPercentageAsync(int userID, int courseID);
         IQueryable<Video> GetVideosQueryableOrdered(WebAppDbContext context, int courseID);
         Task<ServiceTaskResults<UserxCourse?>> AddUserToCourseAsync(int userID, string courseCode);
+        Task<ServiceTaskResults<List<UserxCourse>>> GetUserJoinedCoursesOrderedAsync(int userID, VideoShareData.Enums.SortOrder order);
         //TODO: Delete Course Async
     }
     public class CourseService : ICourseService
@@ -142,6 +144,29 @@ namespace VideoShareData.Services
                 //You are here if the course code does not match an existing course
                 return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "Invalid course code" };
             }
+        }
+        public async Task<ServiceTaskResults<List<UserxCourse>>> GetUserJoinedCoursesOrderedAsync(int userID, VideoShareData.Enums.SortOrder order) {
+            List<UserxCourse> returnList = new List<UserxCourse>();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            switch (order) {
+                case Enums.SortOrder.Unordered: {
+                        returnList = await context.UserxCourses.Where(uc => uc.UserId == userID).ToListAsync();
+                    break;
+                }
+                case Enums.SortOrder.AscendingAlphabetical: {
+                        returnList = await context.UserxCourses.Where(uc => uc.UserId == userID).OrderBy(uc => uc.Course.CourseName).ToListAsync();
+                        break;
+                }
+                case Enums.SortOrder.MostRecent: {
+                        returnList = await context.UserxCourses.Where(uc => uc.UserId == userID).OrderByDescending(uc => context.UDF_CourseMostRecentVisit(uc.UserId, uc.CourseId)).ToListAsync();
+                        break;
+                }
+                case Enums.SortOrder.DescendingCompletion:{
+                        returnList = await context.UserxCourses.Where(uc => uc.UserId == userID).OrderByDescending(uc => context.UDF_CompletionPercentage(uc.UserId, uc.CourseId)).ToListAsync();
+                        break;
+                }
+            }
+            return new ServiceTaskResults<List<UserxCourse>> { TaskSuccessful = true, ReturnValue = returnList };
         }
     }
 }
