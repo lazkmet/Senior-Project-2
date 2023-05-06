@@ -19,6 +19,7 @@ namespace VideoShareData.Services
         Task<Course> UpdateCourseAsync(Course courseToUpdate, List<string> propertiesUpdated);
         Task<int> GetCompletionPercentageAsync(int userID, int courseID);
         IQueryable<Video> GetVideosQueryableOrdered(WebAppDbContext context, int courseID);
+        Task<ServiceTaskResults<bool>> CheckUserInCourseAsync(int userID, int courseID);
         Task<ServiceTaskResults<UserxCourse?>> AddUserToCourseAsync(int userID, string courseCode);
         Task<ServiceTaskResults<List<UserxCourse>>> GetUserJoinedCoursesOrderedAsync(int userID, VideoShareData.Enums.SortOrder order);
         //TODO: Delete Course Async
@@ -104,6 +105,11 @@ namespace VideoShareData.Services
             return returnValue;
         }
 
+        public async Task<ServiceTaskResults<bool>> CheckUserInCourseAsync(int userID, int courseID) {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            bool result = await context.UserxCourses.AnyAsync(uc => uc.UserId == userID && uc.CourseId == courseID);
+            return new ServiceTaskResults<bool> { TaskSuccessful = true, ReturnValue = result };
+        }
         public async Task<ServiceTaskResults<UserxCourse?>> AddUserToCourseAsync(int userID, string courseCode) { 
             using var context = await _contextFactory.CreateDbContextAsync();
             UserxCourse? newRelation = null;
@@ -120,10 +126,13 @@ namespace VideoShareData.Services
                     //you are trying to add them to.
                     return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "A course owner cannot join their own course" };
                 }
-                if (await context.UserxCourses.AnyAsync(uc => uc.UserId == userID && uc.CourseId == course.CourseId))
+                else if (await context.UserxCourses.AnyAsync(uc => uc.UserId == userID && uc.CourseId == course.CourseId))
                 {
-                    //You are here if there is already a relation for this User and Course combination
-                    return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "The User to add is already a member of that course" }; ;
+                    var result = await this.CheckUserInCourseAsync(userID, course.CourseId);
+                    if (result.ReturnValue) {
+                        //You are here if there is already a relation for this User and Course combination
+                        return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "The User to add is already a member of that course" };
+                    }
                 }
                 /*Now that you have verified that:
                     -The userID is valid

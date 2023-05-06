@@ -7,6 +7,8 @@
 @inject ICourseService _courseService
 @inject NavigationManager _navManager
 
+<PageTitle>Course@(currentCourse is not null ? " - " + currentCourse.CourseName : "")</PageTitle>
+
 <AuthorizeView>
     <Authorized>
         @if (loading)
@@ -77,7 +79,7 @@
                         {//You are here if you should render the component. 
                          //If lesson limit type is Hide and video is unavailable, you should not render the component
                             <VideoTab VideoID=@v.VideoId disabled=@(!videoAvailable) includeCourseTitle=false styleProps=@(new StyleProperties(){Height = "100px", MaxHeight="100px", Width="85%"}) onClick="() => {NavigateToVideo(v.VideoId);}">
-                                <CompletedCheckmark Completed=isCompleted style="height:40px;width:40px;margin-left:auto;"/>                                                        
+                                <CompletedCheckmark Completed=isCompleted StyleProps=@(new StyleProperties {Height="40px", Width="40px"}) style="margin-left:auto;"/>                                                        
                             </VideoTab>
                         }
                         previousVideo = v;

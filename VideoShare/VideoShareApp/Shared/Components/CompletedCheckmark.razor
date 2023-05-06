@@ -1,7 +1,10 @@
-﻿<div class=@((Completed ? "vs-checked" : "vs-unchecked") + (CanToggle ? " vs-toggle" : "")) style=@style @onclick=Toggle>
+﻿@using VideoShareData.DTOs
+@using System.Text.RegularExpressions
+
+<div class=@((Completed ? "vs-checked" : "vs-unchecked") + (CanToggle ? " vs-toggle" : "")) style=@style @onclick=Toggle>
     @if (Completed)
     {
-        <span class="oi oi-check" style="color:#06C202;padding:12.5% 0;width:100%;text-align:center;font-size:30px;"></span>
+        <span class="oi oi-check" style=@checkboxStyle></span>
     }
 </div>
 
@@ -11,7 +14,26 @@
     [Parameter]
     public bool CanToggle { get; set; } = false;
     [Parameter]
+    public StyleProperties? StyleProps { get; set; } = new StyleProperties();
+    //THIS WILL ONLY LOOK GOOD IF STYLE PROPS ARE DEFINED AS PIXELS
+    [Parameter]
     public string? style { get; set; } = "";
+
+    private string checkboxStyle = "color:#06C202;width:inherit;text-align:center;display:block;position:static;padding:18.75%;";
+
+    protected override void OnParametersSet()
+    {
+        style = style + StyleProps?.GetStyle() + "";
+        if (StyleProps?.Height is not null)
+        {
+            int height;
+            string numbers = Regex.Replace(StyleProps.Height, "[^0-9]", "");
+            if (int.TryParse(numbers, out height))
+            {
+                checkboxStyle += "font-size:" + height * 0.625 + "px;";
+            }
+        }
+    }
 
     public void Toggle()
     {

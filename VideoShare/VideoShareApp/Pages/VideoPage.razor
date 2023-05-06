@@ -1,0 +1,204 @@
+﻿@page "/Video/{videoID:int}"
+@using VideoShareData.Enums
+@using VideoShareData.Helpers
+@using VideoShareData.DTOs
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
+@inject AuthenticationStateProvider _authProvider
+@inject NavigationManager _navManager
+@inject IVideoService _videoService
+@inject ICourseService _courseService
+
+<PageTitle>Video@(videoTitle is not null ? " - " + videoTitle : "")</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @if (loading)
+        {
+            <Loading/>
+        }
+        else if (currentUserID == -1)
+        {
+            <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                Error: Current user does not exist or has not joined this course
+            </div>
+        }
+        else if (currentVideo is null)
+        {
+            <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                Error: Video not found
+            </div>
+        }
+        else if (!videoAvailable)
+        {
+            <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                Video Unavailable
+            </div>
+        }
+        else
+        {
+            <div style="display:flex;flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;">
+                
+                <div style="width:85%;">
+                    <div style="display:flex;flex-direction:row;">
+                        <div style="width:fit-content;flex-shrink:0;">
+                            <h2>@videoTitle</h2>
+                            <div style="display:flex;flex-direction:row;align-items:center;">
+                                <span>Video @(currentVideo.OrderInCourse) of @(numVideosInCourse)</span>
+                                @if (currentVideo.UserxVideos.Count() > 0)
+                                {
+                                    <CompletedCheckmark Completed=@currentVideo.UserxVideos.First().VideoCompleted StyleProps=@(new StyleProperties {Height="20px", Width="20px"}) style="margin:0 10px;"></CompletedCheckmark>
+                                }
+                                <span class="customlink" @onclick=NavigateToCourse>View Course ></span>
+                            </div>
+                        </div>
+                        @if (String.IsNullOrEmpty(errorMessage) == false)
+                        {
+                            <div class="alert alert-danger" style="margin-bottom:20px;flex-grow:1;">@errorMessage</div>
+                        }
+                    </div>
+                    @*Put the video element here*@
+                </div>
+
+                <div class="standardGreen" style="height:2px;width:100%;margin-top:30px;margin-bottom:30px;" />
+                
+            </div>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public int videoID { get; set; }
+
+    protected Video? currentVideo;
+    protected int currentUserID;
+    protected int numVideosInCourse = 0;
+    private bool isOwner = false;
+    private bool videoAvailable = false;
+    private string? videoTitle;
+    private string? videoURL;
+    private bool loading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        currentUserID = ClaimsHelper.getUserID(authState);
+
+        var results = await _videoService.GetVideoByIdAsync(videoID);
+
+        if (results.TaskSuccessful)
+        {
+            currentVideo = results.ReturnValue;
+
+            using var dbContext = await _contextFactory.CreateDbContextAsync();
+            numVideosInCourse = await dbContext.Videos.CountAsync(v => v.CourseId == currentVideo.CourseId);
+            dbContext.Dispose();
+
+            var currentCourse = await _courseService.GetCourseByIdAsync(currentVideo.CourseId);
+
+            if (currentCourse is not null)
+            {
+                currentVideo.Course = currentCourse;
+
+                isOwner = (currentCourse.OwnerId == currentUserID);
+                if (!isOwner)
+                {
+                    var results2 = await _courseService.CheckUserInCourseAsync(currentUserID, currentCourse.CourseId);
+                    if (!results2.ReturnValue)
+                    {
+                        //Signifies to the page that the user should not have access to this video because they are not in the course
+                        currentUserID = -1;
+                    }
+                    else
+                    {
+                        var results4 = await _videoService.VisitUserVideoAsync(currentUserID, currentVideo.VideoId, true);
+                        if (results4.TaskSuccessful)
+                        {
+                            currentVideo.UserxVideos = new List<UserxVideo> { results4.ReturnValue };
+                        }
+                        else
+                        {
+                            errorMessage = "Error gathering UserxVideo data: " + results4.TaskMessage + ".";    
+                        }
+                    }
+                }
+                videoAvailable = await CheckAvailableAsync();
+            }
+
+            var results3 = await _videoService.GetURLAsync(currentVideo);
+            if (results3.TaskSuccessful)
+            {
+                videoURL = results3.ReturnValue;
+            }
+            else
+            {
+                errorMessage = "Error generating video URL: " + results3.TaskMessage + ".";    
+            }
+
+            videoTitle = currentVideo.VideoTitle; //Using variable in case I decide to utilize YT API for title later
+        }
+
+        //At this point, if all relevant objects exist, 
+        //the user is either the owner of or a student in the video's course,
+        //and the user has permission to access the current video (based on the course's lesson limit behavior),
+        //THEN the video will display properly.
+        //Video will contain Course object, and a UserxCourse object (possibly newly generated) 
+        //if the user is not the owner
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    private async Task<bool> CheckAvailableAsync()
+    {
+        if (currentVideo is null)
+        {
+            return false;
+        }
+        if (currentVideo.Course is null)
+        {
+            return false;
+        }
+        if (isOwner)
+        {
+            return true;
+        }
+        if (currentVideo.OrderInCourse == 1)
+        {
+            return true;
+        }
+        if (currentVideo.UserxVideos.Count() > 0 && currentVideo.UserxVideos.First().VideoCompleted)
+        {
+            return true;
+        }
+        else
+        {
+            bool returnValue = false;
+            LessonLimitType courseLimitType = currentVideo.Course.LessonLimitType;
+            if (courseLimitType == LessonLimitType.None)
+            {
+                returnValue = true;
+            }
+            else
+            {
+                //Check the previous video to see if it has been completed
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var previousCompleted = await context.UserxVideos.AnyAsync(uv => uv.UserId == currentUserID && uv.Video.OrderInCourse == (currentVideo.OrderInCourse - 1) && uv.VideoCompleted);
+                if (previousCompleted)
+                {
+                    returnValue = true;
+                }
+            }
+            return returnValue;
+        }
+        
+    }
+    protected void NavigateToCourse()
+    {
+        if (currentVideo is not null)
+        {
+            _navManager.NavigateTo(_navManager.BaseUri + "Course/" + currentVideo.CourseId);
+        }
+    }
+}

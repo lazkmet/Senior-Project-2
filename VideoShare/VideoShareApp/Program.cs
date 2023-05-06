@@ -28,6 +28,7 @@ builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, UserAuthenticationProvider>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<ICourseService, CourseService>();
+builder.Services.AddTransient<IVideoService, VideoService>();
 
 //Set up needed components for Authentication
 SetupAuthentication(builder.Services);
