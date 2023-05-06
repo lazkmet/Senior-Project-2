@@ -1,5 +1,6 @@
 ﻿@page "/MyCourses"
 @page "/MyCourses/Join/{courseCode}"
+@page "/Course/Join/{courseCode}"
 @using VideoShareData.Helpers
 @using VideoShareData.DTOs
 @using VideoShareData.Enums
@@ -42,6 +43,7 @@
                 <div style="display:flex;flex-direction:row;width:100%;">
                     <div style="width:40%;display:flex;flex-direction:row;align-items:center;">
                         @*There would be something here if my imported libraries worked as expected*@
+                        @*https://www.w3schools.com/tags/tag_select.asp*@
                     </div>
                     <h2 style="flex-shrink:0;">Joined Courses</h2>
                     <EditForm Model="@courseCodeModel" OnValidSubmit=TryAddCourseAsync Context="editContext" style="width:40%;padding-left:40px;">
@@ -61,7 +63,7 @@
                 <div>
                     @foreach (UserxCourse c in currentUser.UserxCourses)
                     {
-                        <div style="padding:20px;display:inline-block;vertical-align:top;">
+                        <div style="padding:15px;display:inline-block;vertical-align:top;">
                             <CourseCard courseID="@c.CourseId" userID=@currentUser.UserId style="width:325px;height:400px;flex-shrink:0;"></CourseCard>
                         </div>
                     }
@@ -92,8 +94,23 @@
         //This query selects the current User along with their owned courses and the userXcourse objects for their joined courses
         currentUser = await dbContext.Users.Where(u => u.UserId == ID)
             .Include(u => u.Courses) //Owned courses
-            .Include(u => u.UserxCourses) //Joined courses
             .AsSplitQuery().FirstOrDefaultAsync();
+
+        if (currentUser is not null)
+        {
+            //If navigation included /Join/CourseCode, attempt to add it
+            if (!string.IsNullOrWhiteSpace(courseCode))
+            {
+                courseCodeModel.enteredCode = courseCode;
+                await TryAddCourseAsync();
+            }
+            //Get the Joined Courses, currently just ordered by Ascending Alphabetical sort
+            var result = await _courseService.GetUserJoinedCoursesOrderedAsync(currentUser.UserId, SortOrder.AscendingAlphabetical);
+            if (result.TaskSuccessful)
+            {
+                currentUser.UserxCourses = result.ReturnValue;
+            }
+        }
 
         loading = false;
         StateHasChanged();

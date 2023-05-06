@@ -11,6 +11,7 @@ namespace VideoShareData.Helpers
 {
     public class ClaimsHelper
     {
+        public static string ProfilePictureClaim { get;} = "http://VideoShare/claims/ProfilePicturePath";
         public static string? getClaimValue(AuthenticationState context, string typeName) {
             string? claimValue = context.User.Claims.FirstOrDefault(x => x.Type.Equals(typeName, StringComparison.OrdinalIgnoreCase))?.Value;
             //If value is whitespace, null should be returned because claim has no value.

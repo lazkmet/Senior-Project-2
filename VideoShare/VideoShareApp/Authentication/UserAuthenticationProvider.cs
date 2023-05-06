@@ -8,15 +8,19 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using VideoShareData.DTOs;
 using VideoShareData.Models;
+using VideoShareData.Services;
+using VideoShareData.Helpers;
 
 namespace VideoShareApp.Authentication
 {
     internal class UserAuthenticationProvider : AuthenticationStateProvider
     {
         private readonly ProtectedSessionStorage _sessionStorage;
+        private readonly IUserService _userService;
         private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
-        public UserAuthenticationProvider(ProtectedSessionStorage sessionStorage) {
+        public UserAuthenticationProvider(ProtectedSessionStorage sessionStorage, IUserService userService) {
             _sessionStorage = sessionStorage;
+            _userService = userService;
         }
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
@@ -34,7 +38,7 @@ namespace VideoShareApp.Authentication
                         new Claim(ClaimTypes.NameIdentifier, userStorage.Id.ToString()),
                         new Claim(ClaimTypes.Name, userStorage.FullName),
                         new Claim(ClaimTypes.Role, userStorage.Role.ToString()),
-                        new Claim("http://VideoShare/claims/ProfilePicturePath", userStorage.PfpFilepath ?? "")
+                        new Claim(ClaimsHelper.ProfilePictureClaim, userStorage.PfpFilepath ?? "")
                     };
                     var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(claimsList));
                     return await Task.FromResult(new AuthenticationState(claimsPrincipal));
@@ -53,20 +57,23 @@ namespace VideoShareApp.Authentication
                 Id = user.UserId,
                 Role = user.UserType
             };
+
+            user.LatestLogin = DateTime.Now;
+            await _userService.UpdateUserAsync(user, new List<string>() { "LatestLogin" });
+
             //TO DO: Get filepath of server cached profile picture
             await _sessionStorage.SetAsync("UserSession", userSession);
             var claimsList = new List<Claim>{
                         new Claim(ClaimTypes.NameIdentifier, userSession.Id.ToString()),
                         new Claim(ClaimTypes.Name, userSession.FullName),
                         new Claim(ClaimTypes.Role, userSession.Role.ToString()),
-                        new Claim("http://VideoShare/claims/ProfilePicturePath", userSession.PfpFilepath ?? "")
+                        new Claim(ClaimsHelper.ProfilePictureClaim, userSession.PfpFilepath ?? "")
                     };
             var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(claimsList, "CustomVideoShareAuthentication"));
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
         }
 
         public async Task Logout() {
-            //TODO: un-cache profile picture
             await _sessionStorage.DeleteAsync("UserSession");
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
         }

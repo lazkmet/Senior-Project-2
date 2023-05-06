@@ -18,6 +18,11 @@ h3 {
     margin-bottom: 0px !important; 
 }
 
+h4 {
+    font-weight:400 !important;
+    margin-bottom:0px !important;
+}
+
 h5 {
     margin-bottom: 0.1rem !important;
 }

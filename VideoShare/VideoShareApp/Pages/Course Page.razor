@@ -1,0 +1,186 @@
+﻿@page "/Course/{courseID:int}"
+@using VideoShareData.Helpers
+@using VideoShareData.Enums
+@using VideoShareData.DTOs
+@inject AuthenticationStateProvider _authProvider
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
+@inject ICourseService _courseService
+@inject NavigationManager _navManager
+
+<AuthorizeView>
+    <Authorized>
+        @if (loading)
+        {
+            <Loading/>
+        }
+        else if (currentUserID == -1)
+        {
+            <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                Error: Current user does not exist or has not joined this course
+            </div>
+        }
+        else if (currentCourse is null)
+        {
+            <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                Error: Could not find course
+            </div>
+        }
+        else
+        {
+            <div style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;align-items:center;">
+                <div style="display:flex; flex-direction:row; align-items:center;">
+                    <div style="max-width:30%;">
+                        <img src="@coursePhotoUrl" style="object-fit:contain;max-width:100%;"/>
+                    </div>
+                    <div style="flex-grow:1;margin-left:20px;">
+                        <div style="display:flex; flex-direction:row;">
+                            <div>
+                                <h2 style="height:min-content;margin-top:10px;text-align:center;">@currentCourse.CourseName</h2>
+                                @if (isOwner)
+                                {
+                                    <div style="display:flex;flex-direction:row">
+                                        <button class="btn-primary" style="margin-right:10px;" @onclick=NavigateToEdit>Edit Course</button>
+                                        <button class="btn-primary" @onclick=NavigateToStudents>View Students</button>
+                                    </div>
+                                }
+                            </div>
+                            @if (!isOwner)
+                            {
+                                <div style="width:125px;aspect-ratio:1 / 1;background-color:green;margin-left:20px;margin-bottom:auto;">@(completionPercentage)%</div>
+                            }
+                        </div>
+                        <h4>
+                            @(currentCourse.CourseDescription ?? "")
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="standardGreen" style="height:2px;width:100%;margin-top:30px;margin-bottom:30px;" />
+
+                @if (String.IsNullOrEmpty(errorMessage) == false)
+                {
+                    <div class="alert alert-danger" style="margin-bottom:20px;">@errorMessage</div>
+                }
+
+                @{
+                    Video? previousVideo = null;
+                    foreach (Video v in currentCourse.Videos)
+                    {
+                        bool isCompleted = false;
+                        if (v.UserxVideos.Count() > 0)
+                        {
+                            isCompleted = v.UserxVideos.First().VideoCompleted;
+                        }
+
+                        bool videoAvailable = isCompleted || CheckAvailable(v, previousVideo);
+                        if (!(!videoAvailable && currentCourse.LessonLimitType == LessonLimitType.Hide))
+                        {//You are here if you should render the component. 
+                         //If lesson limit type is Hide and video is unavailable, you should not render the component
+                            <VideoTab VideoID=@v.VideoId disabled=@(!videoAvailable) includeCourseTitle=false styleProps=@(new StyleProperties(){Height = "100px", MaxHeight="100px", Width="85%"}) onClick="() => {NavigateToVideo(v.VideoId);}">
+                                <CompletedCheckmark Completed=isCompleted style="height:40px;width:40px;margin-left:auto;"/>                                                        
+                            </VideoTab>
+                        }
+                        previousVideo = v;
+                    }
+                }
+
+            </div>
+        } 
+    </Authorized>  
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public int courseID { get; set; } = 0;
+
+    protected Course? currentCourse;
+    protected int completionPercentage = 0;
+    protected int currentUserID;
+    protected string coursePhotoUrl = "default_course.png";
+    private bool loading = true;
+    private string? errorMessage;
+    private bool isOwner = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        currentUserID = ClaimsHelper.getUserID(authState);
+        currentCourse = await _courseService.GetCourseByIdAsync(courseID);
+
+        using var dbContext = await _contextFactory.CreateDbContextAsync();
+        if (currentCourse is not null) {
+            isOwner = (currentUserID == currentCourse.OwnerId);
+            if (isOwner || await dbContext.Users.AnyAsync(u => u.UserId == currentUserID && u.UserxCourses.Any(uc => uc.CourseId == currentCourse.CourseId)))
+            {
+                //You are here if the current user can view this course. They are the owner or have a userxcourse object created
+                currentCourse.Videos = await dbContext.Videos.Where(v => v.CourseId == currentCourse.CourseId)
+                .Include(v => v.UserxVideos.Where(uv => uv.UserId == currentUserID))
+                .AsSplitQuery()
+                .AsNoTracking()
+                .ToListAsync();
+            }
+            else
+            {
+                //You are here if the user does not exist OR they have not joined this course
+                currentUserID = -1;
+            }
+
+            completionPercentage = await _courseService.GetCompletionPercentageAsync(currentUserID, currentCourse.CourseId);
+            //Do stuff to grab course photo here - using default for now
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    private bool CheckAvailable(Video videoToCheck, Video? previousVideo)
+    {
+        if (currentCourse is null)
+        {
+            return false;
+        }
+        if (videoToCheck.OrderInCourse == 1)
+        {
+            return true;
+        }
+        else
+        {
+            bool returnValue = false;
+            LessonLimitType courseLimitType = currentCourse.LessonLimitType;
+            if (courseLimitType == LessonLimitType.None)
+            {
+                returnValue = true;
+            }
+            else
+            {
+                //Check the previous video to see if it has been completed
+                if (previousVideo is not null)
+                {
+                    if (previousVideo.UserxVideos.Count() > 0)
+                    {
+                        returnValue = previousVideo.UserxVideos.First().VideoCompleted;
+                    }
+                }
+            }
+            return returnValue;
+        }
+    }
+    protected void NavigateToVideo(int videoID)
+    {
+        _navManager.NavigateTo(_navManager.BaseUri + "Video/" + videoID);    
+    }
+    protected void NavigateToEdit()
+    {
+        if (currentCourse is not null)
+        {
+            _navManager.NavigateTo(_navManager.BaseUri + "Course/Edit/" + currentCourse.CourseId);
+        }    
+    }
+    protected void NavigateToStudents()
+    {
+        if (currentCourse is not null)
+        {
+            _navManager.NavigateTo(_navManager.BaseUri + "Course/Students/" + currentCourse.CourseId);
+        }
+    }
+}

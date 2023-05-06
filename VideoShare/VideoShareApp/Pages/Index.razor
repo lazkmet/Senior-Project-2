@@ -26,8 +26,8 @@
                     @if (currentUser.UserxVideos.Count() > 0)
                     {
                         <h2>Continue Watching</h2>
-                        <VideoTab VideoID=@(currentUser.UserxVideos.First().VideoId) style="height:100px;width:85%;" includeCourseTitle=true onClick=@NavigateToVideo>
-                            <button class="btn-primary" style="margin-left:auto;margin-right:10px;height:40px;min-width:115px;" @onclick=@(x => _navManager.NavigateTo("/Courses/" + currentUser.UserxVideos.First().Video.CourseId)) @onclick:stopPropagation="true">View Course</button>
+                        <VideoTab VideoID=@(currentUser.UserxVideos.First().VideoId) styleProps=@(new StyleProperties(){Height = "100px", MaxHeight="100px", Width="85%"}) includeCourseTitle=true onClick=@NavigateToVideo>
+                            <button class="btn-primary" style="margin-left:auto;margin-right:10px;height:40px;min-width:115px;" @onclick=@(x => _navManager.NavigateTo("/Course/" + currentUser.UserxVideos.First().Video.CourseId)) @onclick:stopPropagation="true">View Course</button>
                         </VideoTab>
                         <div class="standardGreen" style="height:2px;margin-top:30px;margin-bottom:30px;" />
                     }

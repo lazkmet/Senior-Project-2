@@ -1,0 +1,24 @@
+﻿<div class=@((Completed ? "vs-checked" : "vs-unchecked") + (CanToggle ? " vs-toggle" : "")) style=@style @onclick=Toggle>
+    @if (Completed)
+    {
+        <span class="oi oi-check" style="color:#06C202;padding:12.5% 0;width:100%;text-align:center;font-size:30px;"></span>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public bool Completed { get; set; }
+    [Parameter]
+    public bool CanToggle { get; set; } = false;
+    [Parameter]
+    public string? style { get; set; } = "";
+
+    public void Toggle()
+    {
+        if (CanToggle)
+        {
+            Completed = !Completed;
+            StateHasChanged();
+        }
+    }
+}
