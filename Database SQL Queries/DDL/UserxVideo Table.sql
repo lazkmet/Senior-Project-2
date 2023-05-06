@@ -10,6 +10,8 @@ CREATE TABLE UserxVideo(
 		CONSTRAINT UserxVideo_Default_VideoCompleted DEFAULT(0),
 	CurrentTime int NOT NULL
 		CONSTRAINT UserxVideo_Default_CurrentTime DEFAULT(0),
+	LastVisited DateTime
+		CONSTRAINT UserxVideo_Default_LastVisited DEFAULT(CURRENT_TIMESTAMP),
 	CONSTRAINT UserxVideo_PK_UserID_VideoID PRIMARY KEY(UserID, VideoID)
 );
 GO

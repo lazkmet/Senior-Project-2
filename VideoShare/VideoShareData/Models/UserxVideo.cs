@@ -13,7 +13,7 @@ public partial class UserxVideo
 
     public int CurrentTime { get; set; }
 
-    public TimeSpan? LastVisited { get; set; }
+    public DateTime? LastVisited { get; set; }
 
     public virtual User User { get; set; } = null!;
 

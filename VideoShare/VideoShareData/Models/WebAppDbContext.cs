@@ -252,6 +252,9 @@ public partial class WebAppDbContext : DbContext
 
             entity.Property(e => e.UserId).HasColumnName("UserID");
             entity.Property(e => e.VideoId).HasColumnName("VideoID");
+            entity.Property(e => e.LastVisited)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserxVideos)
                 .HasForeignKey(d => d.UserId)
