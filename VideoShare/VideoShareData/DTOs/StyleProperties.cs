@@ -13,7 +13,8 @@ namespace VideoShareData.DTOs
         public string? Width { get; set; }
         public string? MaxHeight { get; set; }
         public string? MaxWidth { get; set; }
-
+        public string? MinHeight { get; set; }
+        public string? MinWidth { get; set; }
         public string GetStyle() {
             string styleString = "";
             if (!String.IsNullOrWhiteSpace(Height)) {
@@ -30,6 +31,14 @@ namespace VideoShareData.DTOs
             if (!String.IsNullOrWhiteSpace(MaxWidth))
             {
                 styleString += "max-width:" + MaxWidth + ";";
+            }
+            if (!String.IsNullOrWhiteSpace(MinHeight))
+            {
+                styleString += "min-height:" + MinHeight + ";";
+            }
+            if (!String.IsNullOrWhiteSpace(MinWidth))
+            {
+                styleString += "min-width:" + MinWidth + ";";
             }
             return styleString;
         }

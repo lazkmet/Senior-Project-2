@@ -57,7 +57,7 @@
                         </div>
                         @if (String.IsNullOrEmpty(errorMessage) == false)
                         {
-                            <div class="alert alert-danger" style="margin-bottom:20px;flex-grow:1;">@errorMessage</div>
+                            <div class="alert alert-danger" style="margin-bottom:20px;margin-left: 20px;flex-grow:1;">@errorMessage</div>
                         }
                     </div>
                 </div>
@@ -66,12 +66,12 @@
                 {
                     if (currentRelation is not null)
                     {
-                        <YoutubeViewer VideoID=@currentVideo.YtvideoId StyleProps=@(new StyleProperties {Width="80%"}) style="margin:20px;" @bind-PlaybackTime=currentRelation.CurrentTime></YoutubeViewer>
+                        <YoutubeViewer OnVideoComplete="CompleteVideoAsync" VideoID=@currentVideo.YtvideoId StyleProps=@(new StyleProperties {Width="80%", MinWidth="480px"}) style="margin:20px;" @bind-PlaybackTime=currentRelation.CurrentTime></YoutubeViewer>
                         <div>Current Playback Time: @currentRelation.CurrentTime</div>
                     }
                     else
                     {
-                        <YoutubeViewer VideoID=@currentVideo.YtvideoId StyleProps=@(new StyleProperties {Width="80%"}) style="margin:20px;" PlaybackTime=0></YoutubeViewer>
+                        <YoutubeViewer OnVideoComplete="CompleteVideoAsync" VideoID=@currentVideo.YtvideoId StyleProps=@(new StyleProperties {Width="80%", MinWidth="480px"}) style="margin:20px;" PlaybackTime=0></YoutubeViewer>
                     }
                 }
                 else
@@ -230,6 +230,30 @@
             return returnValue;
         }
 
+    }
+    protected Task CompleteVideoAsync()
+    {
+        errorMessage = "Video Completed";
+        /*currentRelation.VideoCompleted = true;
+         * currentRelation.CurrentTime = 0;
+         * var result = await _videoService.UpdateUserVideoAsync(currentRelation, new List<string>{"CurrentTime", "VideoCompleted"});
+         * handle result
+         */
+        return Task.CompletedTask;
+    }
+    protected async Task UpdateCurrentTimeAsync()
+    {
+        if (currentRelation is null)
+        {
+            return;
+        }
+        else
+        {
+            /*
+            var result = await _videoService.UpdateUserVideoAsync(currentRelation, new List<string>{"CurrentTime"});
+             */
+            
+        }
     }
     protected void NavigateToCourse()
     {

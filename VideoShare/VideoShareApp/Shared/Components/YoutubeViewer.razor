@@ -1,8 +1,14 @@
 ﻿@using VideoShareData.DTOs
+@implements IAsyncDisposable
+@implements IDisposable
+@inject NavigationManager _navManager
+@inject IJSRuntime _jsRuntime
+@*  See "wwwroot/js/Include_Iframe_API.js" for javascript invoked by the iframe component.
+    I make no promises that it is well-written or safe code.
+    I am not an experienced javascript programmer, but I did the best I could.
+*@
 
-@*Note: A lot of this is haphazardly copied from guides online. I am not a skilled javascript programmer.*@
-
-<iframe id="youtube-iframe-VideoShare" style=@style src="https://www.youtube.com/embed/@VideoID" start="@startTime" allowfullscreen></iframe>
+<iframe id="youtube-iframe-VideoShare" style=@style src=@("https://www.youtube.com/embed/"+ VideoID + "?enablejsapi=1") start="@startTime" allowfullscreen></iframe>
 
 @code {
     [Parameter]
@@ -11,6 +17,8 @@
     [Parameter]
     public int PlaybackTime { get; set; } = 0;
     [Parameter]
+    public EventCallback OnVideoComplete { get; set; }
+    [Parameter]
     public StyleProperties? StyleProps { get; set; }
     [Parameter]
     public string? style { get; set; } = "";
@@ -18,24 +26,57 @@
     public EventCallback<int>? PlaybackTimeChanged { get; set; }
 
     private int startTime;
-
+    private DotNetObjectReference<YoutubeViewer> jsReference;
+    protected override void OnInitialized()
+    {
+        if (jsReference is null)
+        {
+            jsReference = DotNetObjectReference.Create(this);
+        }
+    }
     protected override void OnParametersSet()
     {
         style = style + StyleProps?.GetStyle() + "aspect-ratio: 16 / 9;";
         startTime = PlaybackTime;
     }
-    private Task UpdatePlaybackTime()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        PlaybackTime = PlaybackTime + 1;
-        
-        if (PlaybackTimeChanged is not null)
+        if (firstRender)
         {
-            var PlaybackNonNull = (EventCallback<int>)PlaybackTimeChanged;
-            return PlaybackNonNull.InvokeAsync(PlaybackTime);
+            await _jsRuntime.InvokeVoidAsync("setupYouTubeIframe", jsReference);
         }
-        else
+    }
+    [JSInvokable]
+    public Task UpdatePlaybackTime(int time)
+    {
+        if (time > PlaybackTime)
         {
-            return Task.CompletedTask;    
+            PlaybackTime = time;
+            if (PlaybackTimeChanged is not null)
+            {
+                var PlaybackNonNull = (EventCallback<int>)PlaybackTimeChanged;
+                return PlaybackNonNull.InvokeAsync(PlaybackTime);
+            }
+            else
+            {
+                return Task.CompletedTask;
+            }
         }
+        else return Task.CompletedTask;
+    }
+    [JSInvokable]
+    public async Task CompleteVideoAsync()
+    {
+        await OnVideoComplete.InvokeAsync();
+    }
+    public void Dispose()
+    {
+        _jsRuntime.InvokeVoidAsync("cleanup", jsReference);
+        jsReference.Dispose();
+    }
+    public async ValueTask DisposeAsync()
+    {
+        await _jsRuntime.InvokeVoidAsync("cleanup", jsReference);
+        jsReference.Dispose();
     }
 }
