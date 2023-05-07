@@ -1,31 +1,53 @@
-﻿function initializeYouTubeIframeAPI() {
-    var tag = document.createElement('script');
+﻿function createIFrame() {
+    var newFrame = document.createElement('div');
+    newFrame.setAttribute("id", 'youtube-VideoShare');
 
-    tag.src = "https://www.youtube.com/iframe_api";
-    var videoTag = document.getElementById('youtube-iframe-VideoShare')[0];
-    videoTag.parentNode.insertBefore(tag, videoTag);
+    var placementDiv = document.getElementById('dummy-div');
+    placementDiv.parentNode.insertBefore(newFrame, placementDiv);
 }
 
-var playerMap = new Map();
-var intervalIDMap = new Map();
+window.intervalIDMap = new Map();
 
-function setupYouTubeIframe(dotnetInstance) {
-    onYouTubeIframeAPIReady(dotnetInstance);
+function setupYouTubeIframe(dotnetInstance, videoID, startTime) {
+    createIFrame();
+    onYouTubeIframeAPIReady(dotnetInstance, videoID, startTime);
 }
 
-function onYouTubeIframeAPIReady() {
-    //Do nothing. This is to prevent runtime error when initially loading the API script
+function loadVideo(dotnetInstance, VideoID, startTime) {
+    if (window.player !== undefined) {
+        var oldDotNetInstance = window.player.dotnetInstanceParam;
+        var intervalID = intervalIDMap.get(oldDotNetInstance);
+        window.clearInterval(intervalID);
+        intervalIDMap.delete(oldDotNetInstance);
+
+        window.player.dotnetInstanceParam = dotnetInstance;
+        window.player.loadVideoById({
+            'videoId': VideoID,
+            'startSeconds': startTime
+        });
+    }
 }
 
-function onYouTubeIframeAPIReady(dotnetInstance) {
-    player = new YT.Player('youtube-iframe-VideoShare', {
+function onPlayerReady(event) {
+    event.target.playVideo();
+}
+
+function onYouTubeIframeAPIReady(dotnetInstance, videoID, startTime) {
+    if (dotnetInstance === undefined || videoID === undefined) { return; }
+    window.player = new YT.Player('youtube-VideoShare', {
+        width: 800,
+        height: 450,
+        videoId: videoID,
+        playerVars: {
+            'start': startTime
+        },
         events: {
-            'onStateChange': onPlayerStateChange
+            'onStateChange': onPlayerStateChange,
+            'onReady': onPlayerReady
         }
     });
     //Add a new parameter for the dotnetInstance that this player is a part of
-    player.dotnetInstanceParam = dotnetInstance;
-    playerMap.set(dotnetInstance, player);
+    window.player.dotnetInstanceParam = dotnetInstance;
 }
 
 function onPlayerStateChange(event) {
@@ -36,7 +58,7 @@ function onPlayerStateChange(event) {
     switch (videoState) {
         case 1:
             //Started Playing
-            var intervalID = window.setInterval(updateTime, 100, dotnetInstance);
+            var intervalID = window.setInterval(updateTime, 100, event.target);
             intervalIDMap.set(dotnetInstance, intervalID);
             break;
         case 2:
@@ -59,18 +81,19 @@ function onPlayerStateChange(event) {
     }
 }
 
-function updateTime(dotnetInstance) {
+function updateTime(player) {
     //trigger time update in blazor with integer arg
-    var player = playerMap.get(dotnetInstance);
+    var dotnetInstance = player.dotnetInstanceParam;
     var intvalue = Math.floor(player.getCurrentTime());
     dotnetInstance.invokeMethodAsync('UpdatePlaybackTime', intvalue);
 }
 
-function cleanup(dotnetInstance) {
-    var intervalID = intervalIDMap.get(dotnetInstance);
-    window.clearInterval(intervalID);
-    intervalIDMap.delete(dotnetInstance);
-    playerMap.delete(dotnetInstance);
+function cleanup() {
+    for (let value of intervalIDMap.values()) {
+        window.clearInterval(value);
+    }
+    intervalIDMap.clear();
+    window.player.destroy();
 }
 //time elapsed in seconds: player.getCurrentTime()
 

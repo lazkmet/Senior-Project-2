@@ -61,23 +61,25 @@
                         }
                     </div>
                 </div>
-
-                @if (currentVideo.VideoType == VideoType.Youtube)
-                {
-                    if (currentRelation is not null)
+                <div style="width:80%;min-width:480px;margin:20px;display:flex;flex-direction:column;align-items:center;">
+                    @if (currentVideo.VideoType == VideoType.Youtube)
                     {
-                        <YoutubeViewer OnVideoComplete="CompleteVideoAsync" VideoID=@currentVideo.YtvideoId StyleProps=@(new StyleProperties {Width="80%", MinWidth="480px"}) style="margin:20px;" @bind-PlaybackTime=currentRelation.CurrentTime></YoutubeViewer>
-                        <div>Current Playback Time: @currentRelation.CurrentTime</div>
+                        if (currentRelation is not null)
+                        {
+                            <YoutubeViewer OnVideoComplete="CompleteVideoAsync" VideoID=@currentVideo.YtvideoId @bind-PlaybackTime=currentRelation.CurrentTime></YoutubeViewer>
+                        
+                            <div>Current Playback Time: @currentRelation.CurrentTime</div>
+                        }
+                        else
+                        {
+                            <YoutubeViewer OnVideoComplete="CompleteVideoAsync" VideoID=@currentVideo.YtvideoId PlaybackTime=0></YoutubeViewer>
+                        }
                     }
                     else
                     {
-                        <YoutubeViewer OnVideoComplete="CompleteVideoAsync" VideoID=@currentVideo.YtvideoId StyleProps=@(new StyleProperties {Width="80%", MinWidth="480px"}) style="margin:20px;" PlaybackTime=0></YoutubeViewer>
+                        <div class="alert alert-danger">Uploaded Videos not currently supported</div>
                     }
-                }
-                else
-                {
-                    <div class="alert alert-danger">Uploaded Videos not currently supported</div>
-                }
+                </div>
 
                 <div style="display:flex; flex-direction:row; width:85%;">
                     @if (currentVideo.OrderInCourse > 1)
@@ -157,20 +159,25 @@
                         //Signifies to the page that the user should not have access to this video because they are not in the course
                         currentUserID = -1;
                     }
-                    else
+
+                    videoAvailable = await CheckAvailableAsync();
+
+                    //If video is available, but user has not visited it, create a UserxVideo. If video is unavailable, do not create one.
+                    //If video is "unavailable" but has been completed, update videoAvailable to true
+                    var results4 = await _videoService.VisitUserVideoAsync(currentUserID, currentVideo.VideoId, videoAvailable);
+                    if (results4.TaskSuccessful)
                     {
-                        var results4 = await _videoService.VisitUserVideoAsync(currentUserID, currentVideo.VideoId, true);
-                        if (results4.TaskSuccessful)
+                        currentRelation = results4.ReturnValue;
+                        if (currentRelation.VideoCompleted)
                         {
-                            currentRelation = results4.ReturnValue;
-                        }
-                        else
-                        {
-                            errorMessage = "Error gathering UserxVideo data: " + results4.TaskMessage + ".";    
+                            videoAvailable = true;
                         }
                     }
+                    else
+                    {
+                        errorMessage = "Error gathering UserxVideo data: " + results4.TaskMessage + ".";    
+                    }                    
                 }
-                videoAvailable = await CheckAvailableAsync();
             }
 
             videoTitle = currentVideo.VideoTitle; //Using variable in case I decide to utilize YT API for title later
@@ -202,10 +209,6 @@
             return true;
         }
         if (currentVideo.OrderInCourse == 1)
-        {
-            return true;
-        }
-        if (currentRelation is not null && currentRelation.VideoCompleted)
         {
             return true;
         }

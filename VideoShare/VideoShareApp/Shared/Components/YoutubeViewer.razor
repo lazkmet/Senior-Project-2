@@ -8,7 +8,7 @@
     I am not an experienced javascript programmer, but I did the best I could.
 *@
 
-<iframe id="youtube-iframe-VideoShare" style=@style src=@("https://www.youtube.com/embed/"+ VideoID + "?enablejsapi=1") start="@startTime" allowfullscreen></iframe>
+<div id="dummy-div"></div>
 
 @code {
     [Parameter]
@@ -19,14 +19,12 @@
     [Parameter]
     public EventCallback OnVideoComplete { get; set; }
     [Parameter]
-    public StyleProperties? StyleProps { get; set; }
-    [Parameter]
-    public string? style { get; set; } = "";
-    [Parameter]
     public EventCallback<int>? PlaybackTimeChanged { get; set; }
 
     private int startTime;
     private DotNetObjectReference<YoutubeViewer> jsReference;
+    private bool iFrameInitialized = false;
+    private string currentVideoID = "";
     protected override void OnInitialized()
     {
         if (jsReference is null)
@@ -36,14 +34,21 @@
     }
     protected override void OnParametersSet()
     {
-        style = style + StyleProps?.GetStyle() + "aspect-ratio: 16 / 9;";
-        startTime = PlaybackTime;
+        if (VideoID != currentVideoID){
+            currentVideoID = VideoID;
+            startTime = PlaybackTime;
+            if (iFrameInitialized)
+            {
+                _jsRuntime.InvokeVoidAsync("loadVideo", jsReference, VideoID, startTime);
+            }
+        }
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await _jsRuntime.InvokeVoidAsync("setupYouTubeIframe", jsReference);
+            await _jsRuntime.InvokeVoidAsync("setupYouTubeIframe", jsReference, VideoID, startTime);
+            iFrameInitialized = true;
         }
     }
     [JSInvokable]
@@ -71,12 +76,18 @@
     }
     public void Dispose()
     {
-        _jsRuntime.InvokeVoidAsync("cleanup", jsReference);
+        if (_jsRuntime is not null)
+        {
+            _jsRuntime.InvokeVoidAsync("cleanup", jsReference);
+        }
         jsReference.Dispose();
     }
     public async ValueTask DisposeAsync()
     {
-        await _jsRuntime.InvokeVoidAsync("cleanup", jsReference);
+        if (_jsRuntime is not null)
+        {
+            await _jsRuntime.InvokeVoidAsync("cleanup", jsReference);
+        }
         jsReference.Dispose();
     }
 }
