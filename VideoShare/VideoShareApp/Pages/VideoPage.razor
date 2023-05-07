@@ -36,19 +36,23 @@
         }
         else
         {
-            <div style="display:flex;flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;">
+            <div style="display:flex;flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;align-items:center;">
                 
-                <div style="width:85%;">
+                <div style="width:85%;align-self:flex-start;">
                     <div style="display:flex;flex-direction:row;">
                         <div style="width:fit-content;flex-shrink:0;">
                             <h2>@videoTitle</h2>
                             <div style="display:flex;flex-direction:row;align-items:center;">
                                 <span>Video @(currentVideo.OrderInCourse) of @(numVideosInCourse)</span>
-                                @if (currentVideo.UserxVideos.Count() > 0)
+                                @if (currentRelation is not null)
                                 {
-                                    <CompletedCheckmark Completed=@currentVideo.UserxVideos.First().VideoCompleted StyleProps=@(new StyleProperties {Height="20px", Width="20px"}) style="margin:0 10px;"></CompletedCheckmark>
+                                    <CompletedCheckmark Completed=@currentRelation.VideoCompleted StyleProps=@(new StyleProperties {Height="20px", Width="20px"}) style="margin:0 10px;"></CompletedCheckmark>
+                                    <span class="customlink" @onclick=NavigateToCourse>View Course ></span>
                                 }
-                                <span class="customlink" @onclick=NavigateToCourse>View Course ></span>
+                                else
+                                {
+                                    <span class="customlink" style="margin-left:20px;" @onclick=NavigateToCourse>View Course ></span>
+                                }
                             </div>
                         </div>
                         @if (String.IsNullOrEmpty(errorMessage) == false)
@@ -56,11 +60,54 @@
                             <div class="alert alert-danger" style="margin-bottom:20px;flex-grow:1;">@errorMessage</div>
                         }
                     </div>
-                    @*Put the video element here*@
                 </div>
 
-                <div class="standardGreen" style="height:2px;width:100%;margin-top:30px;margin-bottom:30px;" />
+                @if (currentVideo.VideoType == VideoType.Youtube)
+                {
+                    if (currentRelation is not null)
+                    {
+                        <YoutubeViewer VideoID=@currentVideo.YtvideoId StyleProps=@(new StyleProperties {Width="80%"}) style="margin:20px;" @bind-PlaybackTime=currentRelation.CurrentTime></YoutubeViewer>
+                        <div>Current Playback Time: @currentRelation.CurrentTime</div>
+                    }
+                    else
+                    {
+                        <YoutubeViewer VideoID=@currentVideo.YtvideoId StyleProps=@(new StyleProperties {Width="80%"}) style="margin:20px;" PlaybackTime=0></YoutubeViewer>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-danger">Uploaded Videos not currently supported</div>
+                }
+
+                <div style="display:flex; flex-direction:row; width:85%;">
+                    @if (currentVideo.OrderInCourse > 1)
+                    {
+                        <button class="btn-primary" style="width:100px;height:50px;" @onclick=NavigateToPreviousAsync>&lt Previous</button>
+                    }
+                    <div style="flex-grow:1;" />
+                    @if (currentVideo.OrderInCourse < numVideosInCourse)
+                    {
+                        <div style="height:min-content;overflow:hidden;position:relative;">
+                            @if (!(isOwner || (currentRelation is not null && currentRelation.VideoCompleted)))
+                            {
+                            //If you are not the owner AND you have not completed the current video, disable the button
+                                <div style="width:100%;height:100%;background-color:rgba(251,251,251,0.6);position:absolute;cursor:default;z-index:1" />
+                            }
+                            <button class="btn-primary" style="width:100px;height:50px;" @onclick=NavigateToNextAsync>
+                                Next >
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <div class="standardGreen" style="height:2px;width:100%;margin-top:30px;margin-bottom:20px;" />
                 
+                <div style="width:90%;">
+                    @*TODO: Interface with Youtube API to pull video description if "Use YT Description" is checked*@
+                    @currentVideo.VideoDescription
+                </div>
+
+                <div style="height:40px;"></div>
             </div>
         }
     </Authorized>
@@ -70,13 +117,13 @@
     [Parameter]
     public int videoID { get; set; }
 
-    protected Video? currentVideo;
+    protected Video? currentVideo = null;
+    protected UserxVideo? currentRelation = null;
     protected int currentUserID;
     protected int numVideosInCourse = 0;
     private bool isOwner = false;
     private bool videoAvailable = false;
     private string? videoTitle;
-    private string? videoURL;
     private bool loading = true;
     private string? errorMessage;
 
@@ -115,7 +162,7 @@
                         var results4 = await _videoService.VisitUserVideoAsync(currentUserID, currentVideo.VideoId, true);
                         if (results4.TaskSuccessful)
                         {
-                            currentVideo.UserxVideos = new List<UserxVideo> { results4.ReturnValue };
+                            currentRelation = results4.ReturnValue;
                         }
                         else
                         {
@@ -124,16 +171,6 @@
                     }
                 }
                 videoAvailable = await CheckAvailableAsync();
-            }
-
-            var results3 = await _videoService.GetURLAsync(currentVideo);
-            if (results3.TaskSuccessful)
-            {
-                videoURL = results3.ReturnValue;
-            }
-            else
-            {
-                errorMessage = "Error generating video URL: " + results3.TaskMessage + ".";    
             }
 
             videoTitle = currentVideo.VideoTitle; //Using variable in case I decide to utilize YT API for title later
@@ -168,7 +205,7 @@
         {
             return true;
         }
-        if (currentVideo.UserxVideos.Count() > 0 && currentVideo.UserxVideos.First().VideoCompleted)
+        if (currentRelation is not null && currentRelation.VideoCompleted)
         {
             return true;
         }
@@ -192,7 +229,7 @@
             }
             return returnValue;
         }
-        
+
     }
     protected void NavigateToCourse()
     {
@@ -201,4 +238,42 @@
             _navManager.NavigateTo(_navManager.BaseUri + "Course/" + currentVideo.CourseId);
         }
     }
+    protected async Task NavigateToPreviousAsync()
+    {
+        if (currentVideo is not null)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            Video? previousVideo = await context.Videos.Where(v => v.CourseId == currentVideo.CourseId && v.OrderInCourse == (currentVideo.OrderInCourse - 1)).FirstOrDefaultAsync();
+            if (previousVideo is not null)
+            {
+                _navManager.NavigateTo(_navManager.BaseUri + "Video/" + previousVideo.VideoId); 
+                //Because you navigate to yourself, Blazor does not re-execute Initialization logic, so we have to do it manually
+                await this.InvokeAsync(OnInitializedAsync);
+            }
+            else
+            {
+                errorMessage = "Error: could not find previous video";
+                StateHasChanged();
+            }
+        }
+    }
+    protected async Task NavigateToNextAsync()
+    {
+        if (currentVideo is not null && (isOwner || (currentRelation is not null && currentRelation.VideoCompleted)))
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            Video? nextVideo = await context.Videos.Where(v => v.CourseId == currentVideo.CourseId && v.OrderInCourse == (currentVideo.OrderInCourse + 1)).FirstOrDefaultAsync();
+            if (nextVideo is not null)
+            {
+                _navManager.NavigateTo(_navManager.BaseUri + "Video/" + nextVideo.VideoId);
+                await this.InvokeAsync(OnInitializedAsync);
+            }
+            else
+            {
+                errorMessage = "Error: could not find next video";
+                StateHasChanged();
+            }
+        }
+    }
+
 }

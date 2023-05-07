@@ -16,7 +16,6 @@ namespace VideoShareData.Services
         Task<ServiceTaskResults<Video>> UpdateVideoAsync(Video videoToUpdate, List<string> attributesUpdated);
         Task<ServiceTaskResults<UserxVideo>> UpdateUserVideoAsync(UserxVideo uvToUpdate, List<string> attributesUpdated);
         Task<ServiceTaskResults<UserxVideo?>> CreateUserVideoAsync(int userID, int videoID, bool checkExists = true);
-        Task<ServiceTaskResults<string>> GetURLAsync(Video video);
         //TODO: Create Video Async, Delete Video Async
     }
     public class VideoService : IVideoService
@@ -125,28 +124,6 @@ namespace VideoShareData.Services
             context.Add(newUV);
             await context.SaveChangesAsync();
             return new ServiceTaskResults<UserxVideo?> { TaskSuccessful = true, ReturnValue = newUV};
-        }
-        public async Task<ServiceTaskResults<string>> GetURLAsync(Video video)
-        {
-            string URL = "";
-            switch (video.VideoType) {
-                case VideoType.Youtube: {
-                        if (!string.IsNullOrWhiteSpace(video.YtvideoId)) {
-                            URL = "https://www.youtube.com/embed/" + video.YtvideoId;
-                            return new ServiceTaskResults<string> { TaskSuccessful = true, ReturnValue = URL };
-                        }
-                        else {
-                            return new ServiceTaskResults<string> { TaskSuccessful = false, TaskMessage = "Youtube Video ID is null", ReturnValue = URL };
-                        }
-                }
-                case VideoType.Uploaded: {
-                        //TODO: Asynchronously get the file URL
-                        return new ServiceTaskResults<string> { TaskSuccessful = false, TaskMessage = "User-Uploaded Videos have not yet been implemented", ReturnValue = URL };
-                }
-                default: {
-                        return new ServiceTaskResults<string> { TaskSuccessful = false, TaskMessage = "Unexpected Video Type", ReturnValue = URL };
-                }
-            }
         }
     }
 }

@@ -1,0 +1,41 @@
+﻿@using VideoShareData.DTOs
+
+@*Note: A lot of this is haphazardly copied from guides online. I am not a skilled javascript programmer.*@
+
+<iframe id="youtube-iframe-VideoShare" style=@style src="https://www.youtube.com/embed/@VideoID" start="@startTime" allowfullscreen></iframe>
+
+@code {
+    [Parameter]
+    //Note: This is the 11-character Youtube Video ID, not the app's Video ID
+    public string VideoID { get; set; }
+    [Parameter]
+    public int PlaybackTime { get; set; } = 0;
+    [Parameter]
+    public StyleProperties? StyleProps { get; set; }
+    [Parameter]
+    public string? style { get; set; } = "";
+    [Parameter]
+    public EventCallback<int>? PlaybackTimeChanged { get; set; }
+
+    private int startTime;
+
+    protected override void OnParametersSet()
+    {
+        style = style + StyleProps?.GetStyle() + "aspect-ratio: 16 / 9;";
+        startTime = PlaybackTime;
+    }
+    private Task UpdatePlaybackTime()
+    {
+        PlaybackTime = PlaybackTime + 1;
+        
+        if (PlaybackTimeChanged is not null)
+        {
+            var PlaybackNonNull = (EventCallback<int>)PlaybackTimeChanged;
+            return PlaybackNonNull.InvokeAsync(PlaybackTime);
+        }
+        else
+        {
+            return Task.CompletedTask;    
+        }
+    }
+}
