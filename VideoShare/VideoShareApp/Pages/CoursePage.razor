@@ -117,6 +117,7 @@
                 //You are here if the current user can view this course. They are the owner or have a userxcourse object created
                 currentCourse.Videos = await dbContext.Videos.Where(v => v.CourseId == currentCourse.CourseId)
                 .Include(v => v.UserxVideos.Where(uv => uv.UserId == currentUserID))
+                .OrderBy(v => v.OrderInCourse)
                 .AsSplitQuery()
                 .AsNoTracking()
                 .ToListAsync();

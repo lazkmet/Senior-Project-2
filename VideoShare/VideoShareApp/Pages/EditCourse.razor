@@ -1,0 +1,125 @@
+﻿@page "/Course/Edit/{courseID:int}"
+@using VideoShareData.Helpers
+@using VideoShareData.Enums
+@using VideoShareData.DTOs
+@inject AuthenticationStateProvider _authProvider
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
+@inject ICourseService _courseService
+@inject NavigationManager _navManager
+
+<PageTitle>Edit Course@(currentCourse is not null ? " - " + currentCourse.CourseName : "")</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @if (loading)
+        {
+            <Loading/>
+        }
+        else if (currentUserID == -1 || currentCourse is null || !isOwner)
+        {
+            <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                Error: Course Unavailable
+            </div>
+        }
+        else
+        {
+            <div style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;align-items:center;">
+                <div style="display:flex; flex-direction:row; align-items:center;">
+                    <div style="width:40%;">
+                        <div class="customlink">&lt Return to Course</div>
+                    </div>
+                    <h2 style="flex-shrink:0;">@currentCourse.CourseName</h2>
+                    <div style="width:40%;"/>
+                </div>
+                
+                <div style="display:flex; flex-direction:row; align-items:center;width:100%;margin-top:20px;">
+                    <div style="max-width:30%;">
+                        <img src="@coursePhotoUrl" style="object-fit:contain;max-width:100%;"/>
+                        @*<button class="btn-primary" @onclick=ChangeCoursePicture style="max-width:130px;font-size:16px;">Change Course Picture</button>
+                        Keep this out until PFP changing is added*@
+                    </div>
+                    <div style="flex-grow:1;margin-left:20px;align-self:baseline;">
+                        <h4>
+                            @(currentCourse.CourseDescription ?? "")
+                        </h4>
+                    </div>
+                </div>
+
+                <div style="height:min-content;display:flex;flex-direction:row;">
+                    Radio Buttons: All Videos Available, Lock Upcoming Videos, Hide Upcoming Videos
+                </div>
+
+                <div style="display:flex; flex-direction:row; margin-top:20px;">
+                    <button class="btn-primary" style="width:160px;">Save Changes</button>
+                    <div style="width:60px;"/>
+                    <button class="btn-secondary" style="width:160px;">Discard Changes</button>
+                </div>
+
+                @if (String.IsNullOrEmpty(errorMessage) == false)
+                {
+                    <div class="alert alert-danger" style="margin-bottom:20px;">@errorMessage</div>
+                }
+
+                @*Add list of video displays here - child content is either "Edit" or 
+                    "Save" if selected*@
+
+                <div style="display:flex; flex-direction:row; margin-top:20px;">
+                    <button class="btn-primary" style="width:160px;">Save Changes</button>
+                    <div style="width:60px;" />
+                    <button class="btn-secondary" style="width:160px;">Discard Changes</button>
+                </div>
+
+            </div>
+        } 
+    </Authorized>  
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public int courseID { get; set; } = 0;
+
+    protected Course? currentCourse;
+    protected int completionPercentage = 0;
+    protected int currentUserID;
+    protected string coursePhotoUrl = "default_course.png";
+    private bool loading = true;
+    private string? errorMessage;
+    private bool isOwner = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        currentUserID = ClaimsHelper.getUserID(authState);
+        currentCourse = await _courseService.GetCourseByIdAsync(courseID);
+
+        using var dbContext = await _contextFactory.CreateDbContextAsync();
+        if (currentCourse is not null) {
+            isOwner = (currentUserID == currentCourse.OwnerId);
+            if (isOwner)
+            {
+                //You are here if the current user can view this course. They are the owner or have a userxcourse object created
+                currentCourse.Videos = await dbContext.Videos.Where(v => v.CourseId == currentCourse.CourseId)
+                .OrderBy(v => v.OrderInCourse)
+                .AsNoTracking()
+                .ToListAsync();
+
+                
+            }
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+    private void ChangeCoursePicture()
+    {
+        //Do stuff to ask user to upload a new course picture. Separate from other upload logic    
+    }
+    
+    protected void NavigateToCourse()
+    {
+        if (currentCourse is not null)
+        {
+            _navManager.NavigateTo(_navManager.BaseUri + "Course/" + currentCourse.CourseId);
+        }    
+    }
+}
