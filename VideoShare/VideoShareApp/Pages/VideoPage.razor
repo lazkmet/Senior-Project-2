@@ -2,6 +2,7 @@
 @using VideoShareData.Enums
 @using VideoShareData.Helpers
 @using VideoShareData.DTOs
+@implements IAsyncDisposable
 @inject IDbContextFactory<WebAppDbContext> _contextFactory
 @inject AuthenticationStateProvider _authProvider
 @inject NavigationManager _navManager
@@ -66,9 +67,7 @@
                     {
                         if (currentRelation is not null)
                         {
-                            <YoutubeViewer OnVideoComplete="CompleteVideoAsync" VideoID=@currentVideo.YtvideoId @bind-PlaybackTime=currentRelation.CurrentTime></YoutubeViewer>
-                        
-                            <div>Current Playback Time: @currentRelation.CurrentTime</div>
+                            <YoutubeViewer OnVideoComplete="CompleteVideoAsync" VideoID=@currentVideo.YtvideoId @bind-PlaybackTime=currentRelation.CurrentTime></YoutubeViewer>                        
                         }
                         else
                         {
@@ -234,15 +233,25 @@
         }
 
     }
-    protected Task CompleteVideoAsync()
+    protected async Task CompleteVideoAsync()
     {
-        errorMessage = "Video Completed";
-        /*currentRelation.VideoCompleted = true;
-         * currentRelation.CurrentTime = 0;
-         * var result = await _videoService.UpdateUserVideoAsync(currentRelation, new List<string>{"CurrentTime", "VideoCompleted"});
-         * handle result
-         */
-        return Task.CompletedTask;
+        if (currentRelation is null)
+        {
+            return;
+        }
+
+        currentRelation.VideoCompleted = true;
+        currentRelation.CurrentTime = 0;
+        var result = await _videoService.UpdateUserVideoAsync(currentRelation, new List<string>{"CurrentTime", "VideoCompleted"});
+        if (result.TaskSuccessful)
+        {
+            currentRelation = result.ReturnValue;
+        }
+        else
+        {
+            errorMessage = "Error: " + result.TaskMessage + ".";
+            StateHasChanged();
+        }
     }
     protected async Task UpdateCurrentTimeAsync()
     {
@@ -250,12 +259,19 @@
         {
             return;
         }
-        else
+
+        if (!(currentRelation.VideoCompleted || currentRelation.CurrentTime == 0))
         {
-            /*
-            var result = await _videoService.UpdateUserVideoAsync(currentRelation, new List<string>{"CurrentTime"});
-             */
-            
+            var result = await _videoService.UpdateUserVideoAsync(currentRelation, new List<string> { "CurrentTime" });
+            if (result.TaskSuccessful)
+            {
+                currentRelation = result.ReturnValue;
+            }
+            else
+            {
+                errorMessage = "Error: " + result.TaskMessage + ".";
+                StateHasChanged();
+            }
         }
     }
     protected void NavigateToCourse()
@@ -269,6 +285,7 @@
     {
         if (currentVideo is not null)
         {
+            await UpdateCurrentTimeAsync();
             using var context = await _contextFactory.CreateDbContextAsync();
             Video? previousVideo = await context.Videos.Where(v => v.CourseId == currentVideo.CourseId && v.OrderInCourse == (currentVideo.OrderInCourse - 1)).FirstOrDefaultAsync();
             if (previousVideo is not null)
@@ -288,6 +305,7 @@
     {
         if (currentVideo is not null && (isOwner || (currentRelation is not null && currentRelation.VideoCompleted)))
         {
+            await UpdateCurrentTimeAsync();
             using var context = await _contextFactory.CreateDbContextAsync();
             Video? nextVideo = await context.Videos.Where(v => v.CourseId == currentVideo.CourseId && v.OrderInCourse == (currentVideo.OrderInCourse + 1)).FirstOrDefaultAsync();
             if (nextVideo is not null)
@@ -302,5 +320,11 @@
             }
         }
     }
-
+    public async ValueTask DisposeAsync()
+    {
+        if (_contextFactory is not null && _videoService is not null)
+        {
+            await UpdateCurrentTimeAsync();
+        }
+    }
 }
