@@ -2,6 +2,7 @@
 @using VideoShareData.Helpers
 @using VideoShareData.Enums
 @using VideoShareData.DTOs
+@using BlazorBootstrap
 @inject AuthenticationStateProvider _authProvider
 @inject IDbContextFactory<WebAppDbContext> _contextFactory
 @inject ICourseService _courseService
@@ -19,6 +20,12 @@
         {
             <div class="alert-danger" style="align-self:center;margin-top:30px;">
                 Error: Course Unavailable
+            </div>
+        }
+        else if (editCourseModel is null)
+        {
+            <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                Error: Could not create Edit Model for course
             </div>
         }
         else
@@ -62,6 +69,31 @@
 
                 @*Add list of video displays here - child content is either "Edit" or 
                     "Save" if selected*@
+                @if(editCourseModel.videos.Count() > 0)
+                {
+                    var v = editCourseModel.videos.First();
+                    if (v.VideoId > 0)
+                    {
+                        <VideoTab VideoID="v.VideoId" styleProps="@(new StyleProperties{Height="min-content", Width="80%", MinWidth="300px"})" , includeCourseTitle=false>
+                            <button class="btn-primary" @onclick="async () => {await StartEditVideoAsync(v);}">Edit</button>
+                        </VideoTab>
+                    }
+                    else
+                    {
+                        <div style="height:min-content;width:80%;display:flex;flex-direction:row;position:relative;left:-3px;top:-3px;cursor:pointer;border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;overflow:hidden;">
+                            <img src=@(((YouTubeEditVideoModel)v).YouTubeID is not null ? "http://img.youtube.com/vi/" + ((YouTubeEditVideoModel)v).YouTubeID + "/hqdefault.jpg" : "default_course.png") style="height:128px;position:relative;top:-14px;aspect-ratio:4 / 3;border-right:3px solid rgba(0, 0, 0, 0.5);" />
+                            <div style="display:flex;flex-direction:row;margin-top:10px; margin-bottom:10px;padding-left:20px; padding-right:20px;flex-grow:1;">
+                                <div style="width:70%; padding-right:20px;display:flex;flex-direction:column;">
+                                    <h5 style="height:min-content">@v.VideoTitle</h5>
+                                    <span class="text-description" style="height:auto;font-size:12px;">@v.VideoDescription</span>                                  
+                                </div>
+                                <div style="flex-grow:1;display:flex;">
+                                    <button class="btn-primary" @onclick="async () => {await StartEditVideoAsync(v);}">Edit</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
 
                 <div style="display:flex; flex-direction:row; margin-top:20px;">
                     <button class="btn-primary" style="width:160px;">Save Changes</button>
@@ -70,6 +102,18 @@
                 </div>
 
             </div>
+
+            <Offcanvas @ref="offcanvas" Placement="Placement.Bottom" OnHidden="() => currentEditVideo = null">
+                <BodyTemplate>
+                    @{
+                        var yt = (YouTubeEditVideoModel?)currentEditVideo;
+                        if (yt is not null)
+                        {
+                            <h3>@yt.YouTubeID</h3>
+                        }
+                    }
+                </BodyTemplate>
+            </Offcanvas>
         } 
     </Authorized>  
 </AuthorizeView>
@@ -79,6 +123,9 @@
     public int courseID { get; set; } = 0;
 
     protected Course? currentCourse;
+    protected EditCourseModel editCourseModel;
+    protected EditVideoModel? currentEditVideo;
+    private Offcanvas offcanvas = default!;
     protected int completionPercentage = 0;
     protected int currentUserID;
     protected string coursePhotoUrl = "default_course.png";
@@ -103,18 +150,78 @@
                 .AsNoTracking()
                 .ToListAsync();
 
-                
+                CreateCourseModel();
             }
         }
 
         loading = false;
         StateHasChanged();
     }
+    private void CreateCourseModel()
+    {
+        if (currentCourse is null) { return; }
+        editCourseModel = new EditCourseModel();
+        editCourseModel.CourseName = currentCourse.CourseName;
+        editCourseModel.CourseDescription = currentCourse.CourseDescription ?? "";
+        editCourseModel.LessonLimitType = currentCourse.LessonLimitType;
+        foreach (Video v in currentCourse.Videos)
+        {
+            EditVideoModel? ev = CreateVideoModel(v.VideoId);
+            if (ev is not null)
+            {
+                editCourseModel.videos.Add(ev);
+            }
+            else
+            {
+                errorMessage = "Could not convert video with ID " + v.VideoId + " to Edit Model.";
+                editCourseModel.videos.Clear();
+                break;
+            }
+        }
+    }
+    EditVideoModel? CreateVideoModel(int videoID)
+    {
+        if (currentCourse is null) { return null; }
+        EditVideoModel returnModel;
+        Video? video = currentCourse.Videos.Where(v => v.VideoId == videoID).FirstOrDefault();
+        if (video is null) { return null; }
+        try
+        {
+            switch (video.VideoType)
+            {
+                case VideoType.Youtube:
+                    {
+                        returnModel = new YouTubeEditVideoModel();
+                        ((YouTubeEditVideoModel)returnModel).YouTubeID = video.YtvideoId;
+                        ((YouTubeEditVideoModel)returnModel).UseYTDescription = video.YtuseDescription;
+                        break;
+                    }
+                case VideoType.Uploaded:
+                    {
+                        throw new Exception("Uploaded Videos not Implemented");
+                    }
+                default:
+                    throw new Exception("Unexpected Video Type");
+            }
+            returnModel.VideoId = video.VideoId;
+            returnModel.VideoTitle = video.VideoTitle;
+            returnModel.VideoDescription = video.VideoDescription ?? "";
+            return returnModel;
+        }
+        catch
+        {
+            //If you are here, it means the video could not be converted to an EditVideo
+            return null;
+        }
+    }
+    public async Task StartEditVideoAsync (EditVideoModel ev)
+    {
+        currentEditVideo = ev;
+    }
     private void ChangeCoursePicture()
     {
         //Do stuff to ask user to upload a new course picture. Separate from other upload logic    
     }
-    
     protected void NavigateToCourse()
     {
         if (currentCourse is not null)
