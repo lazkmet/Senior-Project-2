@@ -1,8 +1,17 @@
-﻿<header class="standardGreen" style="height:2rem">
-    <div style="display:flex; flex-direction:row; height:100%; align-items:center;">
+﻿@inject NavigationManager _navManager
+
+<header class="standardGreen" style="height:2rem">
+    <div @onclick=NavigateToHome style="display:flex; flex-direction:row; height:100%; align-items:center;cursor:pointer;width:fit-content;">
         <img src="logo_small.png" height="20" width="20" style="margin-left:10px;margin-right:10px;"/>
         <div style="color:white;">
             Video Share
         </div>
     </div>
 </header>
+
+@code{
+    public void NavigateToHome()
+    {
+        _navManager.NavigateTo(_navManager.BaseUri);
+    }
+}

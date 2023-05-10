@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VideoShareData.Models;
 using VideoShareData.Enums;
+using VideoShareData.DTOs;
 
 namespace VideoShareData.Services
 {
@@ -17,6 +18,7 @@ namespace VideoShareData.Services
         Task<Course?> GetCourseByIdAsync(int courseID);
         Task<ServiceTaskResults<Course?>> CreateCourseAsync(int ownerID);
         Task<Course> UpdateCourseAsync(Course courseToUpdate, List<string> propertiesUpdated);
+        Task<ServiceTaskResults<Course>> UpdateCourseAsync(EditCourseModel courseToUpdate);
         Task<int> GetCompletionPercentageAsync(int userID, int courseID);
         IQueryable<Video> GetVideosQueryableOrdered(WebAppDbContext context, int courseID);
         Task<ServiceTaskResults<bool>> CheckUserInCourseAsync(int userID, int courseID);
@@ -79,10 +81,25 @@ namespace VideoShareData.Services
             await context.SaveChangesAsync();
             return courseToUpdate;
         }
+        public async Task<ServiceTaskResults<Course>> UpdateCourseAsync(EditCourseModel courseToUpdate) {
+            if (courseToUpdate is null) {
+                return new ServiceTaskResults<Course> { TaskSuccessful = false, TaskMessage = "Edit Course Model is null" };
+            }
+            using var context = await _contextFactory.CreateDbContextAsync();
+            var course = await context.Courses.Where(c => c.CourseId == courseToUpdate.CourseId).FirstOrDefaultAsync();
+            if (course is null) {
+                return new ServiceTaskResults<Course> { TaskSuccessful = false, TaskMessage = "Course not found" };
+            }
+            course.CourseName = courseToUpdate.CourseName;
+            course.CourseDescription = courseToUpdate.CourseDescription;
+            course.LessonLimitType = courseToUpdate.LessonLimitType;
+            await context.SaveChangesAsync();
+            return new ServiceTaskResults<Course> { TaskSuccessful = true, ReturnValue = course };
+        }
 
         public async Task<string> GenerateCourseCodeAsync() {
             //Generates a course code that does not already exist in the database.
-            //Unsuitable for large scale applications - repeat generation occurs more often as database fills up
+            //Unsuitable for large scale applications - repeat generation will occur more often as database fills up
             byte[] bytes;
             string returnValue;
             char[] validchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".ToCharArray();

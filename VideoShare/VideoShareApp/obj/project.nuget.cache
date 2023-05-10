@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "kHE5z2owPfWnmrwEoIjOZM0OjU6DnIDCgZlhc68RGI1iUQ+UZy+6of5DYZgux+xlvsOepJYcE3d9QLULWHppRA==",
+  "dgSpecHash": "8ehH8/YLhIMGQjc/J1vigHfuE/PN9OJpuMLUp7w8CXtZHVxnFobF7ICVJ1MvvjvBANPY98Wnuaz+x74sbJm/uA==",
   "success": true,
   "projectFilePath": "C:\\Users\\lkmet\\Desktop\\Spring 2023\\Senior Project\\GitHub Deliverables\\Project-Quriosity\\VideoShare\\VideoShareApp\\VideoShareApp.csproj",
   "expectedPackageFiles": [
@@ -12,6 +12,7 @@
     "C:\\Users\\lkmet\\.nuget\\packages\\microsoft.aspnetcore.components\\6.0.16\\microsoft.aspnetcore.components.6.0.16.nupkg.sha512",
     "C:\\Users\\lkmet\\.nuget\\packages\\microsoft.aspnetcore.components.analyzers\\6.0.16\\microsoft.aspnetcore.components.analyzers.6.0.16.nupkg.sha512",
     "C:\\Users\\lkmet\\.nuget\\packages\\microsoft.aspnetcore.components.authorization\\6.0.16\\microsoft.aspnetcore.components.authorization.6.0.16.nupkg.sha512",
+    "C:\\Users\\lkmet\\.nuget\\packages\\microsoft.aspnetcore.components.dataannotations.validation\\3.2.0-rc1.20223.4\\microsoft.aspnetcore.components.dataannotations.validation.3.2.0-rc1.20223.4.nupkg.sha512",
     "C:\\Users\\lkmet\\.nuget\\packages\\microsoft.aspnetcore.components.forms\\6.0.11\\microsoft.aspnetcore.components.forms.6.0.11.nupkg.sha512",
     "C:\\Users\\lkmet\\.nuget\\packages\\microsoft.aspnetcore.components.web\\6.0.11\\microsoft.aspnetcore.components.web.6.0.11.nupkg.sha512",
     "C:\\Users\\lkmet\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\6.0.16\\microsoft.aspnetcore.cryptography.internal.6.0.16.nupkg.sha512",

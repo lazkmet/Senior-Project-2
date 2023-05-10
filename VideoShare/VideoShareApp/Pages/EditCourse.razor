@@ -6,6 +6,7 @@
 @inject AuthenticationStateProvider _authProvider
 @inject IDbContextFactory<WebAppDbContext> _contextFactory
 @inject ICourseService _courseService
+@inject IVideoService _videoService
 @inject NavigationManager _navManager
 
 <PageTitle>Edit Course@(currentCourse is not null ? " - " + currentCourse.CourseName : "")</PageTitle>
@@ -30,13 +31,17 @@
         }
         else
         {
-            <div style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;align-items:center;">
-                <div style="display:flex; flex-direction:row; align-items:center;">
-                    <div style="width:40%;">
-                        <div class="customlink">&lt Return to Course</div>
+            <EditForm Model=editCourseModel OnValidSubmit=TrySubmitChangesAsync style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;align-items:center;" Context="ThisContextIsNew">
+                <ObjectGraphDataAnnotationsValidator />
+                <div style="display:flex; flex-direction:row; align-items:center;width:100%;">
+                    <div style="width:40%;flex-grow:1;">
+                        <div class="customlink" @onclick=NavigateToCourse style="font-size:20px;">&lt Return to Course</div>
                     </div>
-                    <h2 style="flex-shrink:0;">@currentCourse.CourseName</h2>
-                    <div style="width:40%;"/>
+                    <div style="flex-shrink:0;">
+                        <h2><InputText @bind-Value="editCourseModel.CourseName" style="flex-shrink:0;text-align:center;" placeholder="Course Title" /></h2>
+                        <ValidationMessage For="@(() => editCourseModel.CourseName)" />
+                    </div>
+                    <div style="width:40%;flex-grow:1;"/>
                 </div>
                 
                 <div style="display:flex; flex-direction:row; align-items:center;width:100%;margin-top:20px;">
@@ -47,73 +52,130 @@
                     </div>
                     <div style="flex-grow:1;margin-left:20px;align-self:baseline;">
                         <h4>
-                            @(currentCourse.CourseDescription ?? "")
+                            <InputTextArea @bind-Value=editCourseModel.CourseDescription placeholder="Course Description" style="resize:none;width:100%;" oninput='this.style.height = "";this.style.height = this.scrollHeight + 3 + "px"' />
                         </h4>
+                        <ValidationMessage For="@(() => editCourseModel.CourseDescription)" />
                     </div>
                 </div>
 
-                <div style="height:min-content;display:flex;flex-direction:row;">
-                    Radio Buttons: All Videos Available, Lock Upcoming Videos, Hide Upcoming Videos
+                <div style="height:min-content;display:flex;flex-direction:row;margin-top:20px;">
+                    <InputRadioGroup @bind-Value=editCourseModel.LessonLimitType>
+                        <InputRadio Value="LessonLimitType.None"/>
+                        <div style="margin-left:5px;">All Videos Available</div>
+                        <InputRadio Value="LessonLimitType.Lock" style="margin-left:20px;"/>
+                        <div style="margin-left:5px;">Lock Upcoming Videos</div>
+                        <InputRadio Value="LessonLimitType.Hide" style="margin-left:20px;" />
+                        <div style="margin-left:5px;">Hide Upcoming Videos</div>
+                    </InputRadioGroup>
                 </div>
 
                 <div style="display:flex; flex-direction:row; margin-top:20px;">
-                    <button class="btn-primary" style="width:160px;">Save Changes</button>
+                    <button class="btn-primary" type="submit" style="width:150px;height:50px;">Save Changes</button>
                     <div style="width:60px;"/>
-                    <button class="btn-secondary" style="width:160px;">Discard Changes</button>
+                    <button class="btn-secondary" type="reset" style="width:150px;height:50px;" @onclick=CreateCourseModel>Discard Changes</button>
                 </div>
 
                 @if (String.IsNullOrEmpty(errorMessage) == false)
                 {
-                    <div class="alert alert-danger" style="margin-bottom:20px;">@errorMessage</div>
+                    <div class="alert alert-danger" style="margin-top:20px;margin-bottom:0;">@errorMessage</div>
                 }
 
-                @*Add list of video displays here - child content is either "Edit" or 
-                    "Save" if selected*@
-                @if(editCourseModel.videos.Count() > 0)
-                {
-                    var v = editCourseModel.videos.First();
-                    if (v.VideoId > 0)
-                    {
-                        <VideoTab VideoID="v.VideoId" styleProps="@(new StyleProperties{Height="min-content", Width="80%", MinWidth="300px"})" , includeCourseTitle=false>
-                            <button class="btn-primary" @onclick="async () => {await StartEditVideoAsync(v);}">Edit</button>
-                        </VideoTab>
-                    }
-                    else
-                    {
-                        <div style="height:min-content;width:80%;display:flex;flex-direction:row;position:relative;left:-3px;top:-3px;cursor:pointer;border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;overflow:hidden;">
-                            <img src=@(((YouTubeEditVideoModel)v).YouTubeID is not null ? "http://img.youtube.com/vi/" + ((YouTubeEditVideoModel)v).YouTubeID + "/hqdefault.jpg" : "default_course.png") style="height:128px;position:relative;top:-14px;aspect-ratio:4 / 3;border-right:3px solid rgba(0, 0, 0, 0.5);" />
-                            <div style="display:flex;flex-direction:row;margin-top:10px; margin-bottom:10px;padding-left:20px; padding-right:20px;flex-grow:1;">
+                <ul ondragover="event.preventDefault();" style="margin-top:20px;width:80%;padding-left:0;">
+                @foreach (EditVideoModel v in editCourseModel.videos) {
+                    <li draggable="true" style="list-style-type:none;" 
+                        @key=v.VideoId    
+                        @ondragstart="() => OnDragStart(v)"
+                        @ondragover="() => OnDrop(v)">
+                        @{var yv = (YouTubeEditVideoModel)v;
+                        if (yv is not null)
+                        {
+                        <div style="height:100px;width:100%;display:flex;flex-direction:row;position:relative;left:-3px;top:-3px;border: 3px solid rgba(0, 0, 0, 0.5);border-radius: 6px;overflow:hidden;cursor:pointer;">
+                            <img src=@(yv.YouTubeID is not null ? "http://img.youtube.com/vi/" + yv.YouTubeID + "/hqdefault.jpg" : "default_course.png") style="height:128px;position:relative;top:-16px;aspect-ratio:4 / 3;border-right:3px solid rgba(0, 0, 0, 0.5);" />
+                            <div style="display:flex;flex-direction:row;padding-top:10px; padding-bottom:10px;padding-left:20px; padding-right:20px;flex-grow:1;max-height:100px;">
                                 <div style="width:70%; padding-right:20px;display:flex;flex-direction:column;">
-                                    <h5 style="height:min-content">@v.VideoTitle</h5>
-                                    <span class="text-description" style="height:auto;font-size:12px;">@v.VideoDescription</span>                                  
+                                    <h5 style="height:min-content">@yv.VideoTitle</h5>
+                                    <span class="text-description" style="height:auto;font-size:12px;">@yv.VideoDescription</span>
                                 </div>
-                                <div style="flex-grow:1;display:flex;">
-                                    <button class="btn-primary" @onclick="async () => {await StartEditVideoAsync(v);}">Edit</button>
+                                <div style="flex-grow:1;display:flex;flex-direction:row;">
+                                    <button type="button" class="btn-secondary" style="max-height:40px;margin-left:auto;" @onclick="() => {DeleteVideo(v);}">Delete</button>
+                                    <button type="button" class="btn-primary" style="max-height:40px;margin-left:10px;" @onclick="async () => {await StartEditVideoAsync(v);}">Edit</button>
                                 </div>
                             </div>
                         </div>
+                        }
+                        else
+                        {
+                        <h1 class="alert-warning">Video Type not Supported</h1>
+                        }
+                        <h5>Order in Course: @v.orderInCourse</h5>
+                        }
+                    </li>
+
+                    <ValidationMessage For=@(() => v.VideoTitle) style="margin-bottom:5px;" />
+                    <ValidationMessage For=@(() => v.VideoDescription) style="margin-bottom:5px;" />
+                    if (yv is not null)
+                    {
+                        <ValidationMessage For=@(() => yv.YouTubeID) style="margin-bottom:5px;" />
                     }
                 }
-
-                <div style="display:flex; flex-direction:row; margin-top:20px;">
-                    <button class="btn-primary" style="width:160px;">Save Changes</button>
-                    <div style="width:60px;" />
-                    <button class="btn-secondary" style="width:160px;">Discard Changes</button>
+                </ul>
+                <div @onclick=NewVideoModel style="height:60px;width:80%;border: 3px solid rgba(0, 0, 0, 0.5);border-radius:6px;overflow:hidden;display:flex;flex-direction:row;padding-top:10px; padding-bottom:10px;padding-left:20px; padding-right:20px;align-items:center;cursor:pointer;">
+                    <span class="oi oi-plus" style="color:#037C00;font-size:30px;"></span> <h3 style="margin-left:20px;">New Video</h3>
                 </div>
 
-            </div>
+                <div style="display:flex; flex-direction:row; margin-top:20px;margin-bottom:40px;">
+                    <button class="btn-primary" type="submit" style="width:150px;height:50px;">Save Changes</button>
+                    <div style="width:60px;" />
+                    <button class="btn-secondary" type="reset" style="width:150px;height:50px;" @onclick=CreateCourseModel>Discard Changes</button>
+                </div>
 
-            <Offcanvas @ref="offcanvas" Placement="Placement.Bottom" OnHidden="() => currentEditVideo = null">
+            </EditForm>
+
+            <Modal @ref="modal" OnHidden="ClearEditVideo" Size="ModalSize.Large">
                 <BodyTemplate>
-                    @{
-                        var yt = (YouTubeEditVideoModel?)currentEditVideo;
-                        if (yt is not null)
-                        {
-                            <h3>@yt.YouTubeID</h3>
-                        }
+                    @if(currentEditVideo is not null){
+                    <EditForm Model="@currentEditVideo" OnValidSubmit="async () => await SaveEditVideoAsync(currentEditVideo.VideoId)" Context="newContext" style="display:flex;flex-direction:column;align-items:center;">
+                        <DataAnnotationsValidator/>
+                        <div style="display:flex;flex-direction:column; justify-items:flex-start;width:50%;">
+                            <div class="form-label" style="margin-top:10px;">Title</div>
+                            <InputText @bind-Value="@currentEditVideo.VideoTitle" placeholder="Video Title"></InputText>
+                            <ValidationMessage For="@(() => currentEditVideo.VideoTitle)"></ValidationMessage>
+
+                            <div class="form-label" style="margin-top:10px;">Video Description</div>
+                            <InputTextArea @bind-Value="@currentEditVideo.VideoDescription" placeholder="Enter a video description"></InputTextArea>
+                            <ValidationMessage For="@(() => currentEditVideo.VideoDescription)"></ValidationMessage>
+                            
+                            @{
+                                var yt = (YouTubeEditVideoModel?)currentEditVideo;
+                                if (yt is not null)
+                                {
+                                    <div class="form-label" style="margin-top:10px;">YouTube URL</div>
+                                    <InputText @bind-Value="@yt.YouTubeURL" placeholder="https://www.youtube.com/watch?v=00000000000" @onblur="() => yt.GetIDFromURL()"></InputText>
+                                    <ValidationMessage For="@(() => yt.YouTubeURL)"></ValidationMessage>
+                                   
+                                    <div style="display:flex;flex-direction:row;height:30px;margin-top:10px;">
+                                        <InputCheckbox @bind-Value="@yt.UseYTDescription"></InputCheckbox>
+                                        <div style="margin-left:10px;align-self:center;">Use YouTube Description</div>
+                                    </div>
+                                    <ValidationMessage For="@(() => yt.YouTubeID)"></ValidationMessage>
+                                }
+                                else
+                                {
+                                    <h1 class="alert-warning">Video Type not Supported</h1>
+                                }
+                            }
+                            <div style="display:flex; flex-direction:row; margin-top:20px;">
+                                <button type="submit" class="btn-primary">Save</button>
+                                <div style="width:20px;" />
+                                <button type="reset" class="btn-secondary" @onclick="async () => await modal.HideAsync()">Discard Changes</button>
+                            </div>
+
+                            @*Eventually Attachments go here*@
+                        </div>
+                    </EditForm>
                     }
                 </BodyTemplate>
-            </Offcanvas>
+            </Modal>
         } 
     </Authorized>  
 </AuthorizeView>
@@ -125,7 +187,9 @@
     protected Course? currentCourse;
     protected EditCourseModel editCourseModel;
     protected EditVideoModel? currentEditVideo;
-    private Offcanvas offcanvas = default!;
+    protected int currentDragIndex;
+    private int tempID = -1; //Newly created videos are given a video ID of -1 decreasing incrementally, so that I can still
+    private Modal modal = default!;
     protected int completionPercentage = 0;
     protected int currentUserID;
     protected string coursePhotoUrl = "default_course.png";
@@ -160,7 +224,9 @@
     private void CreateCourseModel()
     {
         if (currentCourse is null) { return; }
+        errorMessage = "";
         editCourseModel = new EditCourseModel();
+        editCourseModel.CourseId = currentCourse.CourseId;
         editCourseModel.CourseName = currentCourse.CourseName;
         editCourseModel.CourseDescription = currentCourse.CourseDescription ?? "";
         editCourseModel.LessonLimitType = currentCourse.LessonLimitType;
@@ -178,11 +244,38 @@
                 break;
             }
         }
+        StateHasChanged();
     }
-    EditVideoModel? CreateVideoModel(int videoID)
+    private void NewVideoModel()
+    {
+        var newVideo = CreateVideoModel();
+        if (newVideo is not null)
+        {
+            editCourseModel.videos.Add(newVideo);
+        }
+        StateHasChanged();
+    }
+    void DeleteVideo(EditVideoModel ev)
+    {
+        if(ev.VideoId > 0)
+        {
+            //If Video ID is a positive integer, it is an existing video and must be deleted. 
+            //Otherwise, it is a new video and can just be removed
+            editCourseModel.deletedVideos.Add(ev);
+        }
+        editCourseModel.videos.Remove(ev);
+    }
+    EditVideoModel? CreateVideoModel(int videoID = 0)
     {
         if (currentCourse is null) { return null; }
         EditVideoModel returnModel;
+        if (videoID == 0)
+        {
+            //If videoID is 0, CreateVideoModel should create a new EditVideoModel. Default type is YouTube by convention
+            returnModel = new YouTubeEditVideoModel();
+            returnModel.VideoId = tempID--;
+            return returnModel;
+        }
         Video? video = currentCourse.Videos.Where(v => v.VideoId == videoID).FirstOrDefault();
         if (video is null) { return null; }
         try
@@ -214,9 +307,98 @@
             return null;
         }
     }
+    //Drag-and-drop code from https://stackoverflow.com/questions/59302823/blazor-re-ordering-a-list-with-drag-and-drop
+    public void OnDragStart(EditVideoModel ev)
+    {
+        currentDragIndex = GetIndex(ev);
+    }
+    public void OnDrop(EditVideoModel ev)
+    {
+        if (ev is null) { return; }
+        var newIndex = GetIndex(ev);
+        currentEditVideo = editCourseModel.videos[currentDragIndex];
+        editCourseModel.videos.RemoveAt(currentDragIndex);
+        editCourseModel.videos.Insert(newIndex, currentEditVideo);
+        currentEditVideo = null;
+        currentDragIndex = newIndex;
+    }
+    public int GetIndex(EditVideoModel ev)
+    {
+        return editCourseModel.videos.FindIndex(video => video.VideoId == ev.VideoId);    
+    }
     public async Task StartEditVideoAsync (EditVideoModel ev)
     {
-        currentEditVideo = ev;
+        switch (ev)
+        {
+            case YouTubeEditVideoModel:
+                var ytVid = (YouTubeEditVideoModel)ev;
+                currentEditVideo = new YouTubeEditVideoModel(ytVid);
+                break;
+            default:
+                errorMessage = "Video type not supported.";
+                return;
+        }
+        await modal.ShowAsync();
+    }
+    public async Task SaveEditVideoAsync(int videoID)
+    {
+        if (currentEditVideo is null) { return; }
+        int index = editCourseModel.videos.FindIndex(editVideo => editVideo.VideoId == videoID);
+        if (index != -1)
+        {
+            editCourseModel.videos[index] = currentEditVideo;
+        }
+        await modal.HideAsync();
+    }
+    public void ClearEditVideo()
+    {
+        currentEditVideo = null;
+    }
+    public async Task TrySubmitChangesAsync()
+    {
+        if (currentCourse is null) { return; }
+        short order = 1;
+        foreach (EditVideoModel ev in editCourseModel.videos)
+        {
+            ev.orderInCourse = order++;
+            if (ev.VideoId > 0)
+            {
+                var result = await _videoService.UpdateVideoAsync(ev);
+                if (!result.TaskSuccessful)
+                {
+                    errorMessage = "ERROR: Problem updating video. (ID: " + ev.VideoId + ")\r\nMessage: " + result.TaskMessage;
+                    return;
+                }
+            }
+            else
+            {
+                var result = await _videoService.CreateVideoAsync(ev, currentCourse.CourseId, false);
+                if (!result.TaskSuccessful)
+                {
+                    errorMessage = "ERROR: Problem creating new video. (Title: " + ev.VideoTitle + ")\r\nMessage: " + result.TaskMessage;
+                    return;
+                }
+            }
+        }
+
+        foreach (EditVideoModel ev in editCourseModel.deletedVideos)
+        {
+            var result = await _videoService.DeleteVideoAsync(ev.VideoId);
+            if (!result.TaskSuccessful)
+            {
+                errorMessage = "Error deleting video. (ID: " + ev.VideoId + ")\r\nMessage: " + result.TaskMessage;
+                return;
+            }
+        }
+
+        var result2 = await _courseService.UpdateCourseAsync(editCourseModel);
+
+        if(!result2.TaskSuccessful) {
+            errorMessage = "Error updating course.\r\nMessage: " + result2.TaskMessage;
+        }
+
+        //"Refresh" the page
+        await OnInitializedAsync();
     }
     private void ChangeCoursePicture()
     {
