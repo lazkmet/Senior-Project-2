@@ -18,6 +18,8 @@ public partial class CourseStudent : Interfaces.FileStreamDataObj
     public string? LastName { get; set; }
 
     public string? FirstName { get; set; }
+
+    public int? CompletionPercentage { get; set; }
     public string getTableName() { return "dbo.CourseStudents"; }
     public string getFilestreamColumn() { return "ProfilePicture"; }
     public string getFileGUID() { return FileGuid.ToString(); }
