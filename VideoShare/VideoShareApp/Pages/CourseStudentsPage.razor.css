@@ -1,0 +1,13 @@
+.striped-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    line-height:1em;
+}
+
+    .striped-list > li:nth-of-type(even) > div div.listrowbox {
+        background-color:#DDDDDD;
+    }
+    .striped-list > li:nth-of-type(odd) > div div.listrowbox {
+        background-color:#EAEAEA;
+    }

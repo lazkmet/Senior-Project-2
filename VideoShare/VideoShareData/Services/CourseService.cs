@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using VideoShareData.Models;
 using VideoShareData.Enums;
 using VideoShareData.DTOs;
+using System.ComponentModel.DataAnnotations;
 
 namespace VideoShareData.Services
 {
@@ -20,9 +21,11 @@ namespace VideoShareData.Services
         Task<Course> UpdateCourseAsync(Course courseToUpdate, List<string> propertiesUpdated);
         Task<ServiceTaskResults<Course>> UpdateCourseAsync(EditCourseModel courseToUpdate);
         Task<int> GetCompletionPercentageAsync(int userID, int courseID);
+        Task<ServiceTaskResults<List<CourseStudent>>> GetStudentsAsync(int courseID);
         IQueryable<Video> GetVideosQueryableOrdered(WebAppDbContext context, int courseID);
         Task<ServiceTaskResults<bool>> CheckUserInCourseAsync(int userID, int courseID);
         Task<ServiceTaskResults<UserxCourse?>> AddUserToCourseAsync(int userID, string courseCode);
+        Task<ServiceTaskResults<bool>> RemoveUserFromCourseAsync(int userID, int courseID);
         Task<ServiceTaskResults<List<UserxCourse>>> GetUserJoinedCoursesOrderedAsync(int userID, VideoShareData.Enums.SortOrder order);
         //TODO: Delete Course Async
     }
@@ -63,6 +66,20 @@ namespace VideoShareData.Services
             {
                 return -1; //Very clearly an error value. Indicates that there was a problem executing the query.
             }
+        }
+        public async Task<ServiceTaskResults<List<CourseStudent>>> GetStudentsAsync(int courseID) {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            if (!await context.Courses.AnyAsync(c => c.CourseId == courseID)) {
+                return new ServiceTaskResults<List<CourseStudent>> { TaskSuccessful = false, TaskMessage = "Course not found"};
+            }
+            List<CourseStudent> returnList = await context.CourseStudents.Where(cs => cs.CourseId == courseID).OrderBy(cs => cs.LastName).ThenBy(cs => cs.FirstName).ToListAsync();          
+            if (returnList.Count() == 0) {
+                return new ServiceTaskResults<List<CourseStudent>> { TaskSuccessful = false, TaskMessage = "Course has no students", ReturnValue = returnList };
+            }
+            foreach (CourseStudent cs in returnList) {
+                cs.CompletionPercentage = await GetCompletionPercentageAsync(cs.UserId, cs.CourseId);
+            }
+            return new ServiceTaskResults<List<CourseStudent>> { TaskSuccessful = true, ReturnValue = returnList };
         }
 
         public IQueryable<Video> GetVideosQueryableOrdered(WebAppDbContext context, int courseID)
@@ -170,6 +187,57 @@ namespace VideoShareData.Services
                 //You are here if the course code does not match an existing course
                 return new ServiceTaskResults<UserxCourse?> { TaskSuccessful = false, TaskMessage = "Invalid course code" };
             }
+        }
+        public async Task<ServiceTaskResults<bool>> RemoveUserFromCourseAsync(int userID, int courseID) {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            if (!await context.Courses.AnyAsync(c => c.CourseId == courseID)) {
+                return new ServiceTaskResults<bool> { TaskSuccessful = false, TaskMessage = "Course not found", ReturnValue = false };
+            }
+            if (!await context.Users.AnyAsync(u => u.UserId == userID)) {
+                return new ServiceTaskResults<bool> { TaskSuccessful = false, TaskMessage = "User not found", ReturnValue = false };
+            }
+            var userToRemove = await context.UserxCourses.FindAsync(userID, courseID);
+            if (userToRemove is null) {
+                return new ServiceTaskResults<bool> { TaskSuccessful = false, TaskMessage = "User has not joined this Course", ReturnValue = false };
+            }
+
+            var result = await ResetCourseProgressAsync(userID, courseID);
+            if (!result.TaskSuccessful) {
+                return new ServiceTaskResults<bool> { TaskSuccessful = false, TaskMessage = "Error clearing user progress: " + result.TaskMessage, ReturnValue = false };
+            }
+
+            context.Remove(userToRemove);
+            await context.SaveChangesAsync();
+            return new ServiceTaskResults<bool> { TaskSuccessful = true, ReturnValue = true};
+        }
+        private async Task<ServiceTaskResults<bool>> ResetCourseProgressAsync(int userID, int courseID, bool checkExists = false) {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            if (checkExists)
+            {
+                if (!await context.Courses.AnyAsync(c => c.CourseId == courseID))
+                {
+                    return new ServiceTaskResults<bool> { TaskSuccessful = false, TaskMessage = "Course not found", ReturnValue = false };
+                }
+                if (!await context.Users.AnyAsync(u => u.UserId == userID))
+                {
+                    return new ServiceTaskResults<bool> { TaskSuccessful = false, TaskMessage = "User not found", ReturnValue = false };
+                }
+            }
+            
+            var videos = await context.UserxVideos.Where(uv => uv.UserId == userID).ToListAsync();
+
+            try
+            {
+                using var transaction = await context.Database.BeginTransactionAsync();
+                context.RemoveRange(videos);
+                context.SaveChanges();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                return new ServiceTaskResults<bool> { TaskSuccessful = false, TaskMessage = ex.Message, ReturnValue = false };
+            }
+            return new ServiceTaskResults<bool> { TaskSuccessful = true, ReturnValue = true };               
         }
         public async Task<ServiceTaskResults<List<UserxCourse>>> GetUserJoinedCoursesOrderedAsync(int userID, VideoShareData.Enums.SortOrder order) {
             List<UserxCourse> returnList = new List<UserxCourse>();

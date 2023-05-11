@@ -1,0 +1,178 @@
+﻿@page "/Course/Students/{courseID:int}"
+@using VideoShareData.Helpers
+@using VideoShareData.Enums
+@using VideoShareData.DTOs
+@using BlazorBootstrap
+@inject AuthenticationStateProvider _authProvider
+@inject IDbContextFactory<WebAppDbContext> _contextFactory
+@inject NavigationManager _navManager
+@inject IUserService _userService
+@inject ICourseService _courseService
+@inject IVideoService _videoService
+
+<AuthorizeView>
+    <Authorized>
+        @if (loading)
+        {
+            <Loading/>
+        }
+        else if (course is null || !isOwner)
+        {
+            <div class="alert-danger" style="align-self:center;margin-top:30px;">
+                Page Unavailable
+            </div>
+        }
+        else
+        {
+            <div style="display:flex; flex-direction:column;padding-top:15px;padding-right:5%;padding-left:5%;align-items:center;">
+                <div style="display:flex; flex-direction:row; align-items:center;width:100%;">
+                    <div style="width:40%;flex-grow:1;">
+                        <div class="customlink" @onclick=NavigateToCourse style="font-size:20px;">&lt Return to Course</div>
+                    </div>
+                    <h2 style="flex-shrink:0;">@course.CourseName</h2>
+                    <div style="width:40%;flex-grow:1;" />
+                </div>
+                
+                <div style="display:flex; flex-direction:row;align-items:center;">
+                    <h5>
+                        <div class="input-group" style="align-items:center">
+                            <div class="input-group-prepend" style="margin-right:10px;pointer-events:none;">Course Code</div>
+                            <input type="text" class="form-control" placeholder="No Data" style="pointer-events:none;width:fit-content;padding-right:5px;text-transform:uppercase;" value=@course.CourseCode readonly />
+                        </div>
+                    </h5>
+                    <div style="width:40px;"/>
+                    <button class="btn-primary" type="button" @onclick="async () => await inviteCodeModal.ShowAsync()" style="height:fit-content;">Invite Students</button>
+                </div>
+
+                <div class="standardGreen" style="height:2px;width:100%;margin-top:30px;margin-bottom:30px;" />
+
+                <ul class="striped-list" style="width:80%;column-count:2;row-gap:0;">
+                    @foreach (CourseStudent cs in students)
+                    {
+                        <li style="display:inline-block;width:100%;">
+                            <div style="display:flex;flex-direction:row;align-items:center;">
+                                <div class="listrowbox" style="display:flex;flex-direction:row;align-items:center;height:40px;width:80%;padding:5px;">
+                                    <ProfilePicture UserId="@cs.UserId" Height=30 Width=30/>
+                                    <div style="margin: 0 40px;font-size:20px;font-weight:500;">@(cs.LastName), @(cs.FirstName)</div>
+                                    <div style="flex-grow:1;"/>
+                                    <div style="width:25px;aspect-ratio:1 / 1;background-color:green;"/>
+                                    <div style="margin:0 10px;">@(cs.CompletionPercentage)%</div>
+                                </div>
+                                <span @onclick="async () => await RemoveFromCourseAsync(cs.UserId)" class="oi oi-circle-x" title="Remove Student" style="color:red;cursor:pointer;font-size:24px;margin:0 10px;"></span>
+                                <span @onclick="async () => await BeginStudentUpdateAsync(cs.UserId)" class="oi oi-pencil" title="Edit Progress" style="color:#696969;cursor:pointer;font-size:24px;"></span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <Modal @ref="inviteCodeModal" Size="ModalSize.Small">
+                <BodyTemplate>
+                    <div style="display:flex;flex-direction:column;align-items:center; text-align:center;">
+                        Share the following link with students you wish to invite to the course:
+                        <div class="customlink">@(_navManager.BaseUri + "Course/Join/" + course.CourseId)</div>
+                        <button class="btn-primary" style="margin-top:10px;" @onclick="async () => await inviteCodeModal.HideAsync()">OK</button>
+                    </div>
+                </BodyTemplate>
+            </Modal>
+
+            <Modal @ref="studentUpdateProgressModal" OnHidden="ClearStudentUpdate">
+                <BodyTemplate>
+
+                </BodyTemplate>
+            </Modal>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public int courseID { get; set; }
+
+    private Course? course;
+    private List<CourseStudent> students = new List<CourseStudent>();
+    private List<UserxVideo> currentStudentVideos = new List<UserxVideo>();
+    private SortOrder studentOrder = SortOrder.AscendingAlphabetical; //Eventually will be updated to use User Setting
+    private Modal inviteCodeModal = default!;
+    private Modal studentUpdateProgressModal = default!;
+    private string? errorMessage = null;
+    private bool isOwner = false;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        var currentUserID = ClaimsHelper.getUserID(authState);
+        course = await _courseService.GetCourseByIdAsync(courseID);
+
+        if (course is not null)
+        {
+            isOwner = (currentUserID == course.OwnerId);
+            if (isOwner)
+            {
+                var results = await _courseService.GetStudentsAsync(courseID);
+                if (results.TaskSuccessful)
+                {
+                    //If task was successful, return value is not null
+                    students = results.ReturnValue;
+                }
+                else
+                {
+                    errorMessage = "Error retrieving students: " + results.TaskMessage + ".";
+                }
+            }
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    private async Task RemoveFromCourseAsync(int userID)
+    {
+        if (course is not null)
+        {
+            var results = await _courseService.RemoveUserFromCourseAsync(userID, course.CourseId);
+            if (!results.TaskSuccessful)
+            {
+                errorMessage = "Error removing user from course: " + results.TaskMessage;
+            }
+            else
+            {
+                students.Remove(students.Where(s => s.UserId == userID).FirstOrDefault());
+            }
+            StateHasChanged();
+        }
+    }
+
+    protected async Task BeginStudentUpdateAsync(int userID)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        currentStudentVideos = await context.UserxVideos.Include(uv => uv.Video).Where(uv => uv.UserId == userID).OrderBy(uv => uv.Video.OrderInCourse).ToListAsync();
+        await studentUpdateProgressModal.ShowAsync();
+    }
+
+    protected async Task SaveStudentUpdateAsync()
+    {
+        List<string> update = new List<string> { "VideoCompleted" };
+        foreach (UserxVideo uv in currentStudentVideos)
+        {
+            var result = await _videoService.UpdateUserVideoAsync(uv, update);
+            if (!result.TaskSuccessful)
+            {
+                errorMessage = "Error saving progress changes for user: " + result.TaskMessage + ".";
+                return;
+            }
+        } 
+        await studentUpdateProgressModal.HideAsync();
+    }
+
+    protected void ClearStudentUpdate()
+    {
+        currentStudentVideos.Clear();
+    }
+
+    private void NavigateToCourse()
+    {
+        _navManager.NavigateTo(_navManager.BaseUri + "Course/" + courseID);
+    }
+}
