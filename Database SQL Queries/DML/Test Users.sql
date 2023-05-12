@@ -1,7 +1,7 @@
 INSERT INTO Users (EmailAddress, FirstName, LastName, UserType, EmailVerified, EncryptedPassword)
 VALUES
-('fakeemail', 'Test', 'One', 2, 1, CONVERT(varbinary(max), 'password', 0)),
-('lazfake', 'Test', 'Two', 1, 1, CONVERT(varbinary(max), 'password', 0)),
-('alsofake', 'Test', 'Three', 1, 1, CONVERT(varbinary(max), 'password', 0)),
-('fhgkhjnbm', 'Test', 'Four', 1, 1, CONVERT(varbinary(max), 'password', 0)),
-('noemail', 'Test', 'Five', 1, 1, CONVERT(varbinary(max), 'password', 0));
+('fakeemail', 'Test', 'One', 2, 1, CONVERT(Varbinary(max), '0xB132FA3FAA0F7681C0CA6A857693DD7F96AD1A4F0B9B4BAF84DF6BBDF96BA114B996D9DE', 1)),
+('lazfake', 'Test', 'Two', 1, 1, CONVERT(Varbinary(max), '0xB132FA3FAA0F7681C0CA6A857693DD7F96AD1A4F0B9B4BAF84DF6BBDF96BA114B996D9DE', 1)),
+('alsofake', 'Test', 'Three', 1, 1, CONVERT(Varbinary(max), '0xB132FA3FAA0F7681C0CA6A857693DD7F96AD1A4F0B9B4BAF84DF6BBDF96BA114B996D9DE', 1)),
+('fhgkhjnbm', 'Test', 'Four', 1, 1, CONVERT(Varbinary(max), '0xB132FA3FAA0F7681C0CA6A857693DD7F96AD1A4F0B9B4BAF84DF6BBDF96BA114B996D9DE', 1)),
+('noemail', 'Test', 'Five', 1, 1, CONVERT(Varbinary(max), '0xB132FA3FAA0F7681C0CA6A857693DD7F96AD1A4F0B9B4BAF84DF6BBDF96BA114B996D9DE', 1));
