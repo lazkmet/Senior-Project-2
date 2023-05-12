@@ -27,7 +27,7 @@
                     <div style="flex-grow:1;"/>
                     <p class="card-text">@(completionPercentage)% Complete</p>
                 </div>
-                <div style="width:30%;aspect-ratio:1 / 1;background-color:green;margin-bottom:auto;"></div>
+                <CircularProgress Progress="@completionPercentage" StyleProps="@(new StyleProperties{Height="90px",Width="90px"})" BackgroundColor="#D9D9D9" InnerCircleColor="#FFFFFF" displayText="false"></CircularProgress>
             </div>
             <div style="flex-grow:1;"/>
             <div style="display:flex;flex-direction:row;justify-content:center;">

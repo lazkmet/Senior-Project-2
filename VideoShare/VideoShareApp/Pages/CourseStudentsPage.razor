@@ -55,8 +55,8 @@
                                     <ProfilePicture UserId="@cs.UserId" Height=30 Width=30/>
                                     <div style="margin: 0 40px;font-size:20px;font-weight:500;">@(cs.LastName), @(cs.FirstName)</div>
                                     <div style="flex-grow:1;"/>
-                                    <div style="width:25px;aspect-ratio:1 / 1;background-color:green;"/>
-                                    <div style="margin:0 10px;">@(cs.CompletionPercentage)%</div>
+                                    <CircularProgress Progress="@(cs.CompletionPercentage ?? 0)" StyleProps="@(new StyleProperties{Height="25px",Width="25px"})" BackgroundColor="#FFFFFF" InnerCircleColor="#EAEAEA" displayText="false"></CircularProgress>
+                                    <div style="margin:0 10px;">@(cs.CompletionPercentage ?? -1)%</div>
                                 </div>
                                 <span @onclick="async () => await RemoveFromCourseAsync(cs.UserId)" class="oi oi-circle-x" title="Remove Student" style="color:red;cursor:pointer;font-size:24px;margin:0 10px;"></span>
                                 <span @onclick="async () => await BeginStudentUpdateAsync(cs.UserId)" class="oi oi-pencil" title="Edit Progress" style="color:#696969;cursor:pointer;font-size:24px;"></span>
@@ -78,8 +78,30 @@
 
             <Modal @ref="studentUpdateProgressModal" OnHidden="ClearStudentUpdate">
                 <BodyTemplate>
-
+                    <div style="display:flex;flex-direction:column;align-items:center;">
+                        <ul class="striped-list">
+                            @foreach(Video v in currentStudentVideos){
+                                <li>
+                                    <div class="listrowbox" style="display:flex; flex-direction:row; padding:5px; width:200px; min-height:30px; align-items:center;">
+                                        <div>@v.VideoTitle</div>
+                                        @if(v.UserxVideos.Count() < 1){
+                                            @*Because the toggling behavior requires a bind value, create a new UserxVideo for each unvisited video. Save them only if toggled to true*@
+                                            v.UserxVideos.Add(new UserxVideo {UserId = -1, VideoId = v.VideoId, VideoCompleted = false, LastVisited = null });
+                                        }
+                                        <CompletedCheckmark @bind-Completed="v.UserxVideos.First().VideoCompleted" CanToggle=true styleProps="@(new StyleProperties {Height="25px", Width="25px", MinWidth="25px"})" style="margin-left:auto;" />                 
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 </BodyTemplate>
+                <FooterTemplate>
+                    <div style="display:flex;flex-direction:row;justify-content:center;align-items:center;width:100%;">
+                        <button class="btn-primary" @onclick=SaveStudentUpdateAsync>Confirm</button>
+                        <div style="width:20px;"/>
+                        <button class="btn-secondary" @onclick="async () => await studentUpdateProgressModal.HideAsync()">Cancel</button>
+                    </div>
+                </FooterTemplate>
             </Modal>
         }
     </Authorized>
@@ -91,7 +113,8 @@
 
     private Course? course;
     private List<CourseStudent> students = new List<CourseStudent>();
-    private List<UserxVideo> currentStudentVideos = new List<UserxVideo>();
+    private List<Video> currentStudentVideos = new List<Video>();
+    private int currentStudentID;
     private SortOrder studentOrder = SortOrder.AscendingAlphabetical; //Eventually will be updated to use User Setting
     private Modal inviteCodeModal = default!;
     private Modal studentUpdateProgressModal = default!;
@@ -146,28 +169,62 @@
 
     protected async Task BeginStudentUpdateAsync(int userID)
     {
+        if (course is null) { return; }
+        currentStudentID = userID;
         using var context = await _contextFactory.CreateDbContextAsync();
-        currentStudentVideos = await context.UserxVideos.Include(uv => uv.Video).Where(uv => uv.UserId == userID).OrderBy(uv => uv.Video.OrderInCourse).ToListAsync();
+        currentStudentVideos = await context.Videos.Include(v => v.UserxVideos.Where(uv => uv.UserId == userID)).Where(v => v.CourseId == course.CourseId).OrderBy(v => v.OrderInCourse).ToListAsync();
         await studentUpdateProgressModal.ShowAsync();
     }
 
     protected async Task SaveStudentUpdateAsync()
     {
         List<string> update = new List<string> { "VideoCompleted" };
-        foreach (UserxVideo uv in currentStudentVideos)
+        foreach (Video v in currentStudentVideos)
         {
-            var result = await _videoService.UpdateUserVideoAsync(uv, update);
-            if (!result.TaskSuccessful)
+            if (v.UserxVideos.Count() > 0)
             {
-                errorMessage = "Error saving progress changes for user: " + result.TaskMessage + ".";
-                return;
+                var relation = v.UserxVideos.First();
+                if (relation.UserId == -1 && relation.VideoCompleted) {
+                    //You are here if the UserxVideo relationship is new and was manually "completed" 
+                    relation.UserId = currentStudentID;
+                    var result = await _videoService.CreateUserVideoAsync(relation.UserId, relation.VideoId);
+                    if (result.TaskSuccessful)
+                    {
+                        result.ReturnValue.VideoCompleted = relation.VideoCompleted;
+                        relation = result.ReturnValue;
+                    }
+                    else
+                    {
+                        errorMessage = "Error saving progress changes for user: " + result.TaskMessage + ".";
+                        return;
+                    }
+                }
+                if (relation.UserId != -1)
+                {
+                    var result = await _videoService.UpdateUserVideoAsync(relation, update);
+                    if (!result.TaskSuccessful)
+                    {
+                        errorMessage = "Error saving progress changes for user: " + result.TaskMessage + ".";
+                        return;
+                    }
+                }
             }
-        } 
+        }
+
+        if (course is not null)
+        {
+            var student = students.Where(s => s.UserId == currentStudentID).FirstOrDefault();
+            if(student is not null){
+                student.CompletionPercentage = await _courseService.GetCompletionPercentageAsync(currentStudentID, course.CourseId);
+            }
+        }
+
         await studentUpdateProgressModal.HideAsync();
     }
 
     protected void ClearStudentUpdate()
     {
+        currentStudentID = 0;
         currentStudentVideos.Clear();
     }
 

@@ -18,6 +18,8 @@
     //THIS WILL ONLY LOOK GOOD IF STYLE PROPS ARE DEFINED AS PIXELS
     [Parameter]
     public string? style { get; set; } = "";
+    [Parameter]
+    public EventCallback<bool>? CompletedChanged { get; set; }
 
     private string checkboxStyle = "color:#06C202;width:inherit;text-align:center;display:block;position:static;padding:18.75%;";
 
@@ -35,12 +37,20 @@
         }
     }
 
-    public void Toggle()
+    public Task Toggle()
     {
         if (CanToggle)
         {
             Completed = !Completed;
+            if (CompletedChanged is not null)
+            {
+                var CompletedNonNull = (EventCallback<bool>)CompletedChanged;
+                return CompletedNonNull.InvokeAsync(Completed);
+            }
             StateHasChanged();
         }
+        return Task.CompletedTask;
     }
+
+
 }

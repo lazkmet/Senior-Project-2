@@ -1,0 +1,44 @@
+﻿@using System.Text.RegularExpressions
+
+<div class="circular-progress" style="@style">
+    <div class="circular-progress-center" style="@centerStyle">
+        @if(displayText == true)
+        {
+            <div style="@textStyle">@(Progress)%</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Progress { get; set; }
+    [Parameter]
+    public string BackgroundColor { get; set; } = "#FFFFFF";
+    [Parameter]
+    public string InnerCircleColor { get; set; } = "#FFFFFF";
+    [Parameter]
+    public StyleProperties? StyleProps { get; set; }
+    [Parameter]
+    public bool? displayText { get; set; } = false;
+    [Parameter]
+    public string? style { get; set; } = "";
+
+    private string centerStyle = "";
+    private string textStyle = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var degrees = 360 * Progress / (double)100;
+        style = style + StyleProps?.GetStyle() + "background:conic-gradient(#06C202 " + degrees + "deg, " + BackgroundColor +" 0deg)";
+        centerStyle = "background-color:"+ InnerCircleColor + ";";
+        if (StyleProps?.Height is not null)
+        {
+            int height;
+            string numbers = Regex.Replace(StyleProps.Height, "[^0-9]", "");
+            if (int.TryParse(numbers, out height))
+            {
+                textStyle += "font-size:" + height * 0.2 + "px;";
+            }
+        }
+    }
+}
