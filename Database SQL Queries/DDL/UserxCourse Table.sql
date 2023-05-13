@@ -11,9 +11,3 @@ CREATE TABLE UserxCourse(
 	CONSTRAINT UserxCourse_PK_UserID_CourseID PRIMARY KEY(UserID, CourseID)
 );
 GO
-
-CREATE VIEW CourseStudents AS
-	SELECT uc.CourseID, u.UserID, u.FileGUID, u.ProfilePicture, u.LastName, u.FirstName, dbo.UDF_CompletionPercentage(uc.UserID, uc.CourseID) AS CompletionPercentage
-	FROM Users u
-		JOIN UserxCourse uc ON uc.UserID = u.UserID
-GO

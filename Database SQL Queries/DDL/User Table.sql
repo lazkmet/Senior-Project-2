@@ -37,8 +37,3 @@ GO
 
 CREATE INDEX Users_idx_EmailAddress ON Users(EmailAddress);
 GO
-
-CREATE VIEW AllUsers AS (
-	SELECT u.UserID, u.EmailAddress, u.FirstName, u.LastName, u.DateCreated AS DateJoined, (SELECT COUNT(*) FROM Courses c WHERE c.OwnerID = u.UserID) AS CoursesOwned, (SELECT COUNT(*) FROM UserXCourse uc WHERE uc.UserID = u.UserID) AS CoursesJoined
-	FROM Users u
-);
