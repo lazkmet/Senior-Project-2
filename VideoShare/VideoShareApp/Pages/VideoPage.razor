@@ -150,7 +150,11 @@
                 currentVideo.Course = currentCourse;
 
                 isOwner = (currentCourse.OwnerId == currentUserID);
-                if (!isOwner)
+                if (isOwner)
+                {
+                    videoAvailable = true;
+                }
+                else
                 {
                     var results2 = await _courseService.CheckUserInCourseAsync(currentUserID, currentCourse.CourseId);
                     if (!results2.ReturnValue)
@@ -174,8 +178,8 @@
                     }
                     else
                     {
-                        errorMessage = "Error gathering UserxVideo data: " + results4.TaskMessage + ".";    
-                    }                    
+                        errorMessage = "Error gathering UserxVideo data: " + results4.TaskMessage + ".";
+                    }
                 }
             }
 

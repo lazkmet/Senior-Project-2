@@ -66,11 +66,11 @@
                 </ul>
             </div>
 
-            <Modal @ref="inviteCodeModal" Size="ModalSize.Small">
+            <Modal @ref="inviteCodeModal">
                 <BodyTemplate>
                     <div style="display:flex;flex-direction:column;align-items:center; text-align:center;">
                         Share the following link with students you wish to invite to the course:
-                        <div class="customlink">@(_navManager.BaseUri + "Course/Join/" + course.CourseId)</div>
+                        <div class="customlink">@(_navManager.BaseUri + "Course/Join/" + course.CourseCode)</div>
                         <button class="btn-primary" style="margin-top:10px;" @onclick="async () => await inviteCodeModal.HideAsync()">OK</button>
                     </div>
                 </BodyTemplate>
