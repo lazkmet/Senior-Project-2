@@ -89,7 +89,7 @@
                     @if (currentVideo.OrderInCourse < numVideosInCourse)
                     {
                         <div style="height:min-content;overflow:hidden;position:relative;">
-                            @if (!(isOwner || (currentRelation is not null && currentRelation.VideoCompleted)))
+                            @if (!(isOwner || (currentVideo.Course?.LessonLimitType ?? LessonLimitType.Lock) == LessonLimitType.None || (currentRelation is not null && currentRelation.VideoCompleted)))
                             {
                             //If you are not the owner AND you have not completed the current video, disable the button
                                 <div style="width:100%;height:100%;background-color:rgba(251,251,251,0.6);position:absolute;cursor:default;z-index:1" />
